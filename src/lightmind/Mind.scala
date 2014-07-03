@@ -1,13 +1,9 @@
 package lightmind
 
-import org.lwjgl.LWJGLException
-import org.lwjgl.input.Keyboard
 import org.lwjgl.input.Mouse
-import org.lwjgl.opengl.Display
 import org.lwjgl.opengl._
 import org.lwjgl.BufferUtils
 import org.lwjgl.util.glu.GLU
-import java.nio.{ByteBuffer, FloatBuffer}
 
 object Mind extends App {
   var x = 0
@@ -29,27 +25,26 @@ object Mind extends App {
   var vertexShader = 0
   var fragmentShader = 0
 
-  val scalarw = w/64
-  val scalarh = h/64
+  val scalarw = w / 64
+  val scalarh = h / 64
 
   val ws = 64f
   val hs = 64f
 
   val adj = 0.0f
 
-
   initDisplay()
 
-  normalTexId = TextureUtil.loadPNGTexture("sprite1-normal.png",0)
-  texId = TextureUtil.loadPNGTexture("sprite1-color.png",0)
-  specularTexId = TextureUtil.loadPNGTexture("sprite1-specular.png",0)
+  normalTexId = TextureUtil.loadPNGTexture("sprite1-normal.png", 0)
+  texId = TextureUtil.loadPNGTexture("sprite1-color.png", 0)
+  specularTexId = TextureUtil.loadPNGTexture("sprite1-specular.png", 0)
 
-  val sprites16x16 = new SpriteMap(16,16)
+  val sprites16x16 = new SpriteMap(16, 16)
 
   compileShaders()
   makeQuad()
 
-  while(!Display.isCloseRequested){
+  while (!Display.isCloseRequested) {
     x = x + 1
     t += 0.002f
     drawWithShader()
@@ -58,7 +53,7 @@ object Mind extends App {
 
   clean()
 
-  def clean(){
+  def clean() {
     // Disable the VBO index from the VAO attributes list
     GL20.glDisableVertexAttribArray(0)
 
@@ -86,22 +81,15 @@ object Mind extends App {
     GL20.glDeleteProgram(program)
 
     Display.destroy()
-
   }
 
-
-  def make1Dtexture(){
-
-  }
-
-
-  def makeQuad(){
+  def makeQuad() {
     // OpenGL expects vertices to be defined counter clockwise by default
     val vertices = Array[Float](
       // Left bottom triangle
       ws + adj, -adj, 0f,
       -adj, -adj, 0f,
-      -adj, hs + adj , 0f,
+      -adj, hs + adj, 0f,
       ws + adj, hs + adj, 0f
     )
     // Sending data to OpenGL requires the usage of (flipped) byte buffers
@@ -114,6 +102,7 @@ object Mind extends App {
       0, 1, 2,
       2, 3, 0
     )
+
     indicesCount = indices.length
     val indicesBuffer = BufferUtils.createByteBuffer(indicesCount)
     indicesBuffer.put(indices)
@@ -130,7 +119,7 @@ object Mind extends App {
     colorsBuffer.put(colors)
     colorsBuffer.flip()
 
-    val uvBuffer = sprites16x16.getBuffer(2,0)
+    val uvBuffer = sprites16x16.getBuffer(2, 0)
 
     // Create a new Vertex Array Object in memory and select it (bind)
     // A VAO can have up to 16 attributes (VBO's) assigned to it by default
@@ -156,8 +145,8 @@ object Mind extends App {
     vbouvId = GL15.glGenBuffers()
     GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbouvId)
     GL15.glBufferData(GL15.GL_ARRAY_BUFFER, uvBuffer, GL15.GL_STATIC_DRAW)
-    GL20.glVertexAttribPointer(2,2, GL11.GL_FLOAT, false, 0, 0)
-    GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER,0)
+    GL20.glVertexAttribPointer(2, 2, GL11.GL_FLOAT, false, 0, 0)
+    GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0)
 
     GL20.glEnableVertexAttribArray(0)
     GL20.glEnableVertexAttribArray(1)
@@ -174,11 +163,11 @@ object Mind extends App {
 
   def getLights() = {
     val mx = Mouse.getX
-    val my = h-Mouse.getY
+    val my = h - Mouse.getY
 
     val lights = Array[Float](
       mx, my,
-      200f,400f,
+      200f, 400f,
       225f, 400f,
       100f, 100f
     )
@@ -188,10 +177,10 @@ object Mind extends App {
     lightBuffer.flip()
 
     val lightsCount = 4
-    (lightBuffer,lightsCount)
+    (lightBuffer, lightsCount)
   }
 
-  def drawWithShader(){
+  def drawWithShader() {
     GL11.glClear(GL11.GL_COLOR_BUFFER_BIT)
     if (useShader) {
       ARBShaderObjects.glUseProgramObjectARB(program)
@@ -199,16 +188,16 @@ object Mind extends App {
       val locTime: Int = GL20.glGetUniformLocation(program, "time")
       GL20.glUniform1f(locTime, t)
 
-      val screenInfo = GL20.glGetUniformLocation(program,"screen")
-      GL20.glUniform4f(screenInfo,w,h,0f,0f)
+      val screenInfo = GL20.glGetUniformLocation(program, "screen")
+      GL20.glUniform4f(screenInfo, w, h, 0f, 0f)
 
-      val lights = GL20.glGetUniformLocation(program,"lights")
-      val (l,c) = getLights()
-      GL20.glUniform2(lights,l)
+      val lights = GL20.glGetUniformLocation(program, "lights")
+      val (l, c) = getLights()
+      GL20.glUniform2(lights, l)
 
-      val normLocation = GL20.glGetUniformLocation(program,"norm")
-      val texLocation = GL20.glGetUniformLocation(program,"tex")
-      val specLocation = GL20.glGetUniformLocation(program,"specular")
+      val normLocation = GL20.glGetUniformLocation(program, "norm")
+      val texLocation = GL20.glGetUniformLocation(program, "tex")
+      val specLocation = GL20.glGetUniformLocation(program, "specular")
 
       GL20.glUniform1i(normLocation, 0)
       GL20.glUniform1i(texLocation, 2)
@@ -230,14 +219,13 @@ object Mind extends App {
     // Bind to the VAO that has all the information about the quad vertices
     GL30.glBindVertexArray(vaoId)
 
-
     GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vboiId)
 
-    val posLocation = GL20.glGetUniformLocation(program,"position")
-    for(i <- 0 until scalarw.toInt){
-      for(j <- 0 until scalarh.toInt){
-        GL20.glUniform2f(posLocation,i*ws,j*hs)
-        GL11.glDrawElements(GL11.GL_TRIANGLES, indicesCount, GL11.GL_UNSIGNED_BYTE,0)
+    val posLocation = GL20.glGetUniformLocation(program, "position")
+    for (i <- 0 until scalarw.toInt) {
+      for (j <- 0 until scalarh.toInt) {
+        GL20.glUniform2f(posLocation, i * ws, j * hs)
+        GL11.glDrawElements(GL11.GL_TRIANGLES, indicesCount, GL11.GL_UNSIGNED_BYTE, 0)
       }
     }
 
@@ -262,7 +250,7 @@ object Mind extends App {
     System.out.println("OpenGL version: " + GL11.glGetString(GL11.GL_VERSION))
   }
 
-  def initView(){
+  def initView() {
     GL11.glViewport(0, 0, w, h)
     GL11.glMatrixMode(GL11.GL_PROJECTION)
     GL11.glLoadIdentity
@@ -276,7 +264,7 @@ object Mind extends App {
     GL11.glHint(GL11.GL_PERSPECTIVE_CORRECTION_HINT, GL11.GL_NICEST)
   }
 
-  def compileShaders(){
+  def compileShaders() {
     var vertShader: Int = 0
     var fragShader: Int = 0
 
@@ -303,9 +291,8 @@ object Mind extends App {
     ARBShaderObjects.glAttachObjectARB(program, fragShader)
     ARBShaderObjects.glLinkProgramARB(program)
 
-    GL20.glBindAttribLocation(program, 0,"in_Position")
-    GL20.glBindAttribLocation(program, 1,"in_Color")
-
+    GL20.glBindAttribLocation(program, 0, "in_Position")
+    GL20.glBindAttribLocation(program, 1, "in_Color")
 
     if (ARBShaderObjects.glGetObjectParameteriARB(program, ARBShaderObjects.GL_OBJECT_LINK_STATUS_ARB) == GL11.GL_FALSE) {
       System.err.println(ShaderUtil.getLogInfo(program))
@@ -321,6 +308,4 @@ object Mind extends App {
     vertexShader = vertShader
     fragmentShader = fragShader
   }
-
-
 }

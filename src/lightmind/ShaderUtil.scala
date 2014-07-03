@@ -36,7 +36,8 @@ object ShaderUtil {
       try {
         var line: String = null
         while ((({
-          line = reader.readLine; line
+          line = reader.readLine;
+          line
         })) != null) source.append(line).append('\n')
       }
       catch {

@@ -10,25 +10,25 @@ import de.matthiasmann.twl.utils.PNGDecoder.Format
  * Created by Lukas on 02-07-14.
  */
 object TextureUtil {
-  def loadPNGTexture(filename:String, textureUnit:Int):Int = {
-    val (buf,width,height) = loadTexture(filename)
+  def loadPNGTexture(filename: String, textureUnit: Int): Int = {
+    val (buf, width, height) = loadTexture(filename)
     val texID = GL11.glGenTextures()
     GL13.glActiveTexture(texID)
-    GL11.glBindTexture(GL11.GL_TEXTURE_2D,texID)
+    GL11.glBindTexture(GL11.GL_TEXTURE_2D, texID)
     GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 1)
-    GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB,width,height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buf)
+    GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buf)
 
-    GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S,GL11.GL_REPEAT)
-    GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T,GL11.GL_REPEAT)
+    GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_REPEAT)
+    GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_REPEAT)
 
-    GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER,GL11.GL_NEAREST)
-    GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER,GL11.GL_NEAREST)
+    GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST)
+    GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST)
 
     texID
   }
 
-  def loadTexture(filename:String) = {
-    var buf:ByteBuffer = null
+  def loadTexture(filename: String) = {
+    var buf: ByteBuffer = null
     var tWidth = 0
     var tHeight = 0
 
@@ -50,6 +50,6 @@ object TextureUtil {
 
       in.close()
     }
-    (buf,tWidth,tHeight)
+    (buf, tWidth, tHeight)
   }
 }
