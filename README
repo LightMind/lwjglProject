@@ -1,0 +1,7 @@
+lwjgl project
+
+TODO
+	- implement support for arbitrary positioned tiles
+	- implement batching of tiles, either with some VAO's or one VAO and change to uv buffer to draw multiple tiles.
+	- implement deferred rendering to support many small lights.
+	
