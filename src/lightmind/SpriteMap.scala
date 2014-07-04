@@ -19,6 +19,20 @@ class SpriteMap(tilesRight: Int, tilesDown: Int) {
     buffers.flatten
   }
 
+  def getBuffer() = {
+    val uv = Array[Float](
+      1, 0,
+      0, 0,
+      0, 1,
+      1, 1
+    )
+
+    val uvBuffer = BufferUtils.createFloatBuffer(uv.length)
+    uvBuffer.put(uv)
+    uvBuffer.flip()
+    uvBuffer
+  }
+
   def getBuffer(i: Int, j: Int) = {
     val left = i.toFloat
     val top = j.toFloat

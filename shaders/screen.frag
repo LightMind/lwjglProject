@@ -4,6 +4,8 @@ uniform float time;
 uniform vec4 screen;  // width, height, origin x, origin y
 uniform vec2[] lights;
 uniform vec2 position;
+uniform vec2 uvPosition;
+uniform vec2 uvScalars;
 
 uniform sampler2D norm;
 uniform sampler2D tex;
@@ -46,11 +48,11 @@ void main(){
     float ay = rand0(position*2 + floor(uv*scalar)/scalar)*2.0 - 1.0;
     float az = rand0(position*3 + floor(uv*scalar)/scalar)*2.0 - 1.0;
 
-    vec3 normal = normalize(getNormalAt(uv)+vec3(ax,ay,az)*(specVal*specVal)*1.5);
+    vec3 normal = normalize(getNormalAt(uv));//+vec3(ax,ay,az)*(specVal*specVal)*1.5);
     vec4 color  = texture(tex,uv);
 
     vec3 result = vec3(0.0);
-    for(int i = 0 ; i < 2 ; i++){
+    for(int i = 0 ; i < 1 ; i++){
         vec2 lightZero = lights[0];
         if(i==0){
             lightZero = lights[0];
@@ -68,7 +70,6 @@ void main(){
         vec3 lightPosition = vec3(lightZero.x, 40.0, lightZero.y);
         vec3 toLight = floor(lightPosition/8.0)*8.0 - floor(screenPosition/8.0)*8.0;
 
-
         float lengthToLight = length(toLight)*0.01;
         float falloff = getFalloff(lengthToLight);
         float nDotL =  max(0.0,dot(normalize(toLight),normal));
@@ -76,10 +77,10 @@ void main(){
         vec3 t =  normalize(vec3(0.0,1.0,0.0) + toLight);
         float specular = pow(max(0.0,dot(normal,t)),3.5);
 
-        nDotL = floor(nDotL*4.0)/4.0;
+        //nDotL = floor(nDotL*4.0)/4.0;
         specular = floor(specular*4.0)/4.0;
 
-        vec3 l = specular*specVal*specInt + nDotL * falloff * color.rgb;
+        vec3 l = vec3(nDotL);//specular*specVal*specInt + nDotL * falloff * color.rgb;
         result += l;
     }
 

@@ -4,6 +4,8 @@ uniform float time;
 uniform vec4 screen;  // width,height,origin x, origin y
 uniform vec2[] lights;
 uniform vec2 position;
+uniform vec2 uvPosition;
+uniform vec2 uvScalars;
 
 in vec4 in_Position;
 in vec4 in_Color;
@@ -17,8 +19,8 @@ out Data {
 
 void main(){
     gl_Position = vec4(((position+in_Position.xy)/screen.xy)*2.0 - 1.0,0.0,1.0);
-     gl_Position.y = -gl_Position.y;
+    gl_Position.y = -gl_Position.y;
     Out.screenPosition = in_Position.xy + position;
     Out.color = in_Color;
-    Out.uv = in_uv;
+    Out.uv = uvPosition * uvScalars + in_uv * uvScalars;
 }

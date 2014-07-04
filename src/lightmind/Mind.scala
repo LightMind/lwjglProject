@@ -35,9 +35,9 @@ object Mind extends App {
 
   initDisplay()
 
-  normalTexId = TextureUtil.loadPNGTexture("sprite1-normal.png", 0)
-  texId = TextureUtil.loadPNGTexture("sprite1-color.png", 0)
-  specularTexId = TextureUtil.loadPNGTexture("sprite1-specular.png", 0)
+  normalTexId = TextureUtil.loadPNGTexture("res/sprite1-normal.png", 0)
+  texId = TextureUtil.loadPNGTexture("res/sprite1-color.png", 0)
+  specularTexId = TextureUtil.loadPNGTexture("res/sprite1-specular.png", 0)
 
   val sprites16x16 = new SpriteMap(16, 16)
 
@@ -119,7 +119,7 @@ object Mind extends App {
     colorsBuffer.put(colors)
     colorsBuffer.flip()
 
-    val uvBuffer = sprites16x16.getBuffer(2, 0)
+    val uvBuffer = sprites16x16.getBuffer()
 
     // Create a new Vertex Array Object in memory and select it (bind)
     // A VAO can have up to 16 attributes (VBO's) assigned to it by default
@@ -195,6 +195,9 @@ object Mind extends App {
       val (l, c) = getLights()
       GL20.glUniform2(lights, l)
 
+      val uvScalars = GL20.glGetUniformLocation(program, "uvScalars")
+      GL20.glUniform2f(uvScalars, sprites16x16.sizeWidth, sprites16x16.sizeHeight)
+
       val normLocation = GL20.glGetUniformLocation(program, "norm")
       val texLocation = GL20.glGetUniformLocation(program, "tex")
       val specLocation = GL20.glGetUniformLocation(program, "specular")
@@ -222,8 +225,11 @@ object Mind extends App {
     GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vboiId)
 
     val posLocation = GL20.glGetUniformLocation(program, "position")
+    val uvPosition = GL20.glGetUniformLocation(program, "uvPosition")
+
     for (i <- 0 until scalarw.toInt) {
       for (j <- 0 until scalarh.toInt) {
+        GL20.glUniform2f(uvPosition, 2f, 0f)
         GL20.glUniform2f(posLocation, i * ws, j * hs)
         GL11.glDrawElements(GL11.GL_TRIANGLES, indicesCount, GL11.GL_UNSIGNED_BYTE, 0)
       }
