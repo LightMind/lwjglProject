@@ -68,7 +68,14 @@ void main(){
         }
 
         vec3 lightPosition = vec3(lightZero.x, 40.0, lightZero.y);
-        vec3 toLight = floor(lightPosition/8.0)*8.0 - floor(screenPosition/8.0)*8.0;
+
+        vec3 toLight = vec3(0.0);
+             bool rasterize = false;
+        if( rasterize ) {
+            toLight = floor(lightPosition/8.0)*8.0 - floor(screenPosition/8.0)*8.0;
+        } else {
+            toLight = lightPosition - screenPosition;
+        }
 
         float lengthToLight = length(toLight)*0.01;
         float falloff = getFalloff(lengthToLight);
@@ -77,8 +84,10 @@ void main(){
         vec3 t =  normalize(vec3(0.0,1.0,0.0) + toLight);
         float specular = pow(max(0.0,dot(normal,t)),3.5);
 
-        nDotL = floor(nDotL*4.0)/4.0;
-        specular = floor(specular*4.0)/4.0;
+        if( rasterize ){
+            nDotL = floor(nDotL*4.0)/4.0;
+            specular = floor(specular*4.0)/4.0;
+        }
 
         vec3 l = specular*specVal*specInt + nDotL * falloff * color.rgb;
         result += l;
