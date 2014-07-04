@@ -229,7 +229,7 @@ object Mind extends App {
 
     for (i <- 0 until scalarw.toInt) {
       for (j <- 0 until scalarh.toInt) {
-        GL20.glUniform2f(uvPosition, 2f, 0f)
+        GL20.glUniform2f(uvPosition, i % 2, 0f)
         GL20.glUniform2f(posLocation, i * ws, j * hs)
         GL11.glDrawElements(GL11.GL_TRIANGLES, indicesCount, GL11.GL_UNSIGNED_BYTE, 0)
       }
@@ -240,7 +240,6 @@ object Mind extends App {
     //  GL20.glDisableVertexAttribArray(1)
     //  GL20.glDisableVertexAttribArray(2)
     GL30.glBindVertexArray(0)
-
 
     if (useShader) ARBShaderObjects.glUseProgramObjectARB(0)
   }
