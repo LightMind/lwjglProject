@@ -53,6 +53,8 @@ void main(){
     vec3 normal = normalize(getNormalAt(uv)+vec3(ax,ay,az)*(specVal*specVal)*1.5);
     vec4 color  = texture(tex,uv);
 
+    vec3 ambient = vec3(0.2,0.1,0.2)*0.2;
+
     vec3 result = vec3(0.0);
     for(int i = 0 ; i < 1 ; i++){
         vec2 lightZero = lights[0];
@@ -91,12 +93,11 @@ void main(){
             specular = floor(specular*4.0)/4.0;
         }
 
-        vec3 l = specular*specVal*specInt + nDotL * falloff * color.rgb;
+        vec3 l = specular*specVal*specInt + nDotL * falloff * color.rgb + color.rgb*ambient;
         result += l;
     }
 
-    vec3 ambient = vec3(0.2,0.1,0.2)*0.2;
-    result = result + ambient;
+    result = result;
     glc = vec4(result, 1.0);
 }
 
