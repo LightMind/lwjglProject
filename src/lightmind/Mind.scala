@@ -4,6 +4,8 @@ import org.lwjgl.input.Mouse
 import org.lwjgl.opengl._
 import org.lwjgl.BufferUtils
 import org.lwjgl.util.glu.GLU
+import lightmind.terrain.TileManager
+import scala.util.Random
 
 object Mind extends App {
   var x = 0
@@ -33,6 +35,9 @@ object Mind extends App {
 
   val adj = 0.0f
 
+  val tileManager = new TileManager()
+  val r = new Random()
+
   initDisplay()
 
   normalTexId = TextureUtil.loadPNGTexture("res/sprite1-normal.png", 0)
@@ -43,6 +48,7 @@ object Mind extends App {
 
   compileShaders()
   makeQuad()
+  initTiles()
 
   while (!Display.isCloseRequested) {
     x = x + 1
@@ -52,6 +58,21 @@ object Mind extends App {
   }
 
   clean()
+
+
+  def initTiles() = {
+    for (i <- 0 until w by 64) {
+      for (j <- 0 until 320 by 64) {
+        tileManager.createTile((i, j), (r.nextInt(2), 0))
+      }
+    }
+
+    for (i <- 0 until w by 64) {
+      for (j <- 320 until h by 64) {
+        tileManager.createTile((i, j), (2, 0))
+      }
+    }
+  }
 
   def clean() {
     // Disable the VBO index from the VAO attributes list
@@ -227,12 +248,12 @@ object Mind extends App {
     val posLocation = GL20.glGetUniformLocation(program, "position")
     val uvPosition = GL20.glGetUniformLocation(program, "uvPosition")
 
-    for (i <- 0 until scalarw.toInt) {
-      for (j <- 0 until scalarh.toInt) {
-        GL20.glUniform2f(uvPosition, i % 2, 0f)
-        GL20.glUniform2f(posLocation, i * ws, j * hs)
-        GL11.glDrawElements(GL11.GL_TRIANGLES, indicesCount, GL11.GL_UNSIGNED_BYTE, 0)
-      }
+    for (tile <- tileManager.tiles) {
+      val (i, j) = tile.texture
+      val (x, y) = tile.pos
+      GL20.glUniform2f(uvPosition, i, j)
+      GL20.glUniform2f(posLocation, x, y)
+      GL11.glDrawElements(GL11.GL_TRIANGLES, indicesCount, GL11.GL_UNSIGNED_BYTE, 0)
     }
 
     // Put everything back to default (deselect)
