@@ -10,6 +10,7 @@ uniform vec2 uvScalars;
 uniform sampler2D norm;
 uniform sampler2D tex;
 uniform sampler2D specular;
+uniform sampler2D heightMap;
 
 out vec4 glc;
 
@@ -60,6 +61,7 @@ void main(){
     }
 
     vec4 color  = texture(tex,uv);
+    float height = texture(heightMap,uv).x;
 
     vec3 ambient = vec3(0.2,0.2,0.3)*0.2;
 
@@ -81,6 +83,15 @@ void main(){
 
         vec3 lightPosition = vec3(lightZero.x, 40.0, lightZero.y);
 
+        vec2 toLightOnTexture = lightZero - scp;
+        toLightOnTexture = toLightOnTexture/(512*32);
+
+
+        float height0 = texture(heightMap,uv+toLightOnTexture*0.1666).x;
+        float height1 = texture(heightMap,uv+toLightOnTexture*0.33).x;
+        float height2 = texture(heightMap,uv+toLightOnTexture*0.66).x;
+        float height3 = texture(heightMap,uv+toLightOnTexture).x;
+
         vec3 toLight = vec3(0.0);
         if( rasterize ) {
             toLight = floor(lightPosition/8.0)*8.0 - floor(screenPosition/8.0)*8.0;
@@ -89,7 +100,7 @@ void main(){
         }
 
         float lengthToLight = length(toLight)*0.01;
-        float falloff = getFalloff(lengthToLight);
+        float falloff = getFalloff(lengthToLight*0.1);
         float nDotL =  max(0.0,dot(normalize(toLight),normal));
 
         vec3 t =  normalize(vec3(0.0,1.0,0.0) + toLight);
@@ -98,6 +109,10 @@ void main(){
         if( rasterize ){
             nDotL = floor(nDotL*4.0)/4.0;
             specular = floor(specular*4.0)/4.0;
+        }
+
+        if(height < height1 || height < height2 || height < height3 || height < height0){
+            nDotL = 0.1;
         }
 
         vec3 l = specular*specVal*specInt + nDotL * falloff * color.rgb + color.rgb*ambient;

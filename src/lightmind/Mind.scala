@@ -22,6 +22,7 @@ object Mind extends App {
   var vertexCount = 0
   var indicesCount = 0
   var normalTexId = 0
+  var heightmapTexId = 0
   var texId = 0
   var specularTexId = 0
   var vertexShader = 0
@@ -43,6 +44,7 @@ object Mind extends App {
   normalTexId = TextureUtil.loadPNGTexture("res/sprite1-normal.png", 0)
   texId = TextureUtil.loadPNGTexture("res/sprite1-color.png", 0)
   specularTexId = TextureUtil.loadPNGTexture("res/sprite1-specular.png", 0)
+  heightmapTexId = TextureUtil.loadPNGTexture("res/sprite1-height.png", 0)
 
   val sprites16x16 = new SpriteMap(16, 16)
 
@@ -69,7 +71,7 @@ object Mind extends App {
 
     for (i <- 0 until w by 64) {
       for (j <- 320 until h by 64) {
-        tileManager.createTile((i, j), (2, 0))
+        tileManager.createTile((i, j), (2, 1))
       }
     }
   }
@@ -222,10 +224,12 @@ object Mind extends App {
       val normLocation = GL20.glGetUniformLocation(program, "norm")
       val texLocation = GL20.glGetUniformLocation(program, "tex")
       val specLocation = GL20.glGetUniformLocation(program, "specular")
+      val heightLocation = GL20.glGetUniformLocation(program, "heightMap")
 
       GL20.glUniform1i(normLocation, 0)
       GL20.glUniform1i(texLocation, 2)
       GL20.glUniform1i(specLocation, 4)
+      GL20.glUniform1i(heightLocation, 6)
 
       GL13.glActiveTexture(GL13.GL_TEXTURE0 + 0)
       GL11.glBindTexture(GL11.GL_TEXTURE_2D, normalTexId)
@@ -238,6 +242,10 @@ object Mind extends App {
       GL13.glActiveTexture(GL13.GL_TEXTURE0 + 4)
       GL11.glBindTexture(GL11.GL_TEXTURE_2D, specularTexId)
       GL33.glBindSampler(4, GL11.GL_NEAREST)
+
+      GL13.glActiveTexture(GL13.GL_TEXTURE0 + 6)
+      GL11.glBindTexture(GL11.GL_TEXTURE_2D, heightmapTexId)
+      GL33.glBindSampler(6, GL11.GL_NEAREST)
     }
 
     // Bind to the VAO that has all the information about the quad vertices
