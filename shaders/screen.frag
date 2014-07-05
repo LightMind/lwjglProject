@@ -46,14 +46,22 @@ void main(){
 
     float specInt = rand0(position*4 + uvTiled )*2.0;
 
+    bool randomizeNormals = false;
+    bool rasterize = false;
+
     float ax = rand0(position   + uvTiled)*2.0 - 1.0;
     float ay = rand0(position*2 + uvTiled)*2.0 - 1.0;
     float az = rand0(position*3 + uvTiled)*2.0 - 1.0;
 
-    vec3 normal = normalize(getNormalAt(uv)+vec3(ax,ay,az)*(specVal*specVal)*1.5);
+    vec3 normal = getNormalAt(uv);
+
+    if(randomizeNormals){
+        normal = normalize(normal + vec3(ax,ay,az)*(specVal*specVal)*1.5);
+    }
+
     vec4 color  = texture(tex,uv);
 
-    vec3 ambient = vec3(0.2,0.1,0.2)*0.2;
+    vec3 ambient = vec3(0.2,0.2,0.3)*0.2;
 
     vec3 result = vec3(0.0);
     for(int i = 0 ; i < 1 ; i++){
@@ -74,7 +82,6 @@ void main(){
         vec3 lightPosition = vec3(lightZero.x, 40.0, lightZero.y);
 
         vec3 toLight = vec3(0.0);
-             bool rasterize = false;
         if( rasterize ) {
             toLight = floor(lightPosition/8.0)*8.0 - floor(screenPosition/8.0)*8.0;
         } else {
