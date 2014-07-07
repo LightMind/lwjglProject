@@ -1,10 +1,13 @@
 package lightmind
 
-import org.lwjgl.opengl.{GL13, GL11}
-import java.nio.ByteBuffer
 import java.io.FileInputStream
+import java.nio.ByteBuffer
+
 import de.matthiasmann.twl.utils.PNGDecoder
 import de.matthiasmann.twl.utils.PNGDecoder.Format
+import org.lwjgl.opengl.GL11._
+import org.lwjgl.opengl.GL12._
+import org.lwjgl.opengl.{GL11, GL13}
 
 /**
  * Created by Lukas on 02-07-14.
@@ -51,5 +54,23 @@ object TextureUtil {
       in.close()
     }
     (buf, tWidth, tHeight)
+  }
+
+  def generateTexture(width: Int, height: Int) = {
+    val texId = glGenTextures()
+    GL13.glActiveTexture(texId)
+    glBindTexture(GL_TEXTURE_2D, texId)
+    glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 1)
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
+
+    var none: ByteBuffer = null
+    GL11.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0,
+      GL_RGBA, GL_UNSIGNED_BYTE, none)
+    glBindTexture(GL_TEXTURE_2D, 0)
+
+    texId
   }
 }

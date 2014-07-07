@@ -1,10 +1,13 @@
 package lightmind
 
+import java.nio.{ByteBuffer, ByteOrder}
+
+import lightmind.terrain.TileManager
+import org.lwjgl.BufferUtils
 import org.lwjgl.input.Mouse
 import org.lwjgl.opengl._
-import org.lwjgl.BufferUtils
 import org.lwjgl.util.glu.GLU
-import lightmind.terrain.TileManager
+
 import scala.util.Random
 
 object Mind extends App {
@@ -48,6 +51,11 @@ object Mind extends App {
 
   val sprites16x16 = new SpriteMap(16, 16)
 
+  val fboEnabled = GLContext.getCapabilities().GL_EXT_framebuffer_object
+  val gbuffer1 = TextureUtil.generateTexture(512, 512)
+  val gbuffer2 = TextureUtil.generateTexture(512, 512)
+  val fbo = initFramebuffer(gbuffer1, gbuffer2)
+
   compileShaders()
   makeQuad()
   initTiles()
@@ -61,6 +69,27 @@ object Mind extends App {
 
   clean()
 
+
+  def initFramebuffer(textureId1: Int, textureId2: Int) = {
+    val buffer =
+      if (fboEnabled) {
+        val buffer = ByteBuffer.allocateDirect(1 * 4).order(ByteOrder.nativeOrder()).asIntBuffer()
+        EXTFramebufferObject.glGenFramebuffersEXT(buffer)
+        buffer.get()
+      } else {
+        -1
+      }
+
+    EXTFramebufferObject.glBindFramebufferEXT(EXTFramebufferObject.GL_FRAMEBUFFER_EXT, buffer)
+    EXTFramebufferObject.glFramebufferTexture2DEXT(EXTFramebufferObject.GL_FRAMEBUFFER_EXT, EXTFramebufferObject.GL_COLOR_ATTACHMENT0_EXT,
+      GL11.GL_TEXTURE_2D, textureId1, 0)
+    EXTFramebufferObject.glFramebufferTexture2DEXT(EXTFramebufferObject.GL_FRAMEBUFFER_EXT, EXTFramebufferObject.GL_COLOR_ATTACHMENT1_EXT,
+      GL11.GL_TEXTURE_2D, textureId1, 0)
+
+    EXTFramebufferObject.glBindFramebufferEXT(EXTFramebufferObject.GL_FRAMEBUFFER_EXT, 0)
+
+    buffer
+  }
 
   def initTiles() = {
     for (i <- 0 until w by 64) {
@@ -281,6 +310,7 @@ object Mind extends App {
     Display.setTitle("2d light")
     Display.create(pf, ca)
     Display.sync(60)
+    GL11.glDisable(GL11.GL_DEPTH_TEST)
     System.out.println("OpenGL version: " + GL11.glGetString(GL11.GL_VERSION))
   }
 

@@ -1,7 +1,8 @@
 package lightmind
 
-import org.lwjgl.opengl.{GL11, ARBShaderObjects}
-import java.io.{InputStreamReader, BufferedReader, FileInputStream}
+import java.io.{BufferedReader, FileInputStream, InputStreamReader}
+
+import org.lwjgl.opengl.{ARBShaderObjects, GL11}
 
 /**
  * Created by Lukas on 02-07-14.
