@@ -61,7 +61,7 @@ void main(){
     vec4 color  = texture(tex,uv);
     float height = texture(heightMap,uv).x;
 
-    g1= vec4(color.rgb,height);
+    g1 = vec4(color.rgb,height);
     g2 = vec4(specVal.rgb, uvTiled.x);
-    g3= vec4(normal.xyz, uvTiled.y);
+    g3 = vec4(normal.xyz, uvTiled.y);
 }
