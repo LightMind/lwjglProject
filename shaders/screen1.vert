@@ -1,12 +1,19 @@
+#version 330
+
 uniform float time;
+uniform vec4 screen;  // width,height,origin x, origin y
+uniform vec2[] lights;
+
+in vec4 in_Position;
+in vec2 in_uv;
 
 out Data {
-    vec2 texCoord;
-} DataOut;
-
-const vec2 madd=vec2(0.5,0.5);
+    vec2 screenPosition;
+    vec2 uv;
+} Out;
 
 void main(){
-    gl_Position = gl_Vertex;
-    DataOut.texCoord = gl_Position.xy;
+    gl_Position = in_Position;
+    Out.screenPosition = in_Position.xy;
+    Out.uv = in_uv;
 }

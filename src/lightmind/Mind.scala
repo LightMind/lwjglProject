@@ -8,6 +8,17 @@ import org.lwjgl.input.Mouse
 import org.lwjgl.opengl._
 import org.lwjgl.util.glu.GLU
 
+import org.lwjgl.opengl.GL11._
+import org.lwjgl.opengl.GL12._
+import org.lwjgl.opengl.GL13._
+import org.lwjgl.opengl.GL20._
+import org.lwjgl.opengl.GL21._
+import org.lwjgl.opengl.GL30._
+import org.lwjgl.opengl.GL31._
+import org.lwjgl.opengl.GL32._
+import org.lwjgl.opengl.GL33._
+
+
 import scala.util.Random
 
 object Mind extends App {
@@ -15,7 +26,6 @@ object Mind extends App {
   val w = 1280
   val h = 720
   var t = 1.0f
-  var program = 0
   var useShader = false
   var vaoId = 0
   var vboId = 0
@@ -28,8 +38,6 @@ object Mind extends App {
   var heightmapTexId = 0
   var texId = 0
   var specularTexId = 0
-  var vertexShader = 0
-  var fragmentShader = 0
 
   val scalarw = w / 64
   val scalarh = h / 64
@@ -44,6 +52,8 @@ object Mind extends App {
 
   initDisplay()
 
+  val (fullscrenVAO, fullscrenVBO, fullscrenIndicies, fullscreenVBOUV, fullscrenIndicesCount) = initFullscreenQuad()
+
   normalTexId = TextureUtil.loadPNGTexture("res/sprite1-normal.png", 0)
   texId = TextureUtil.loadPNGTexture("res/sprite1-color.png", 0)
   specularTexId = TextureUtil.loadPNGTexture("res/sprite1-specular.png", 0)
@@ -54,9 +64,11 @@ object Mind extends App {
   val fboEnabled = GLContext.getCapabilities().GL_EXT_framebuffer_object
   val gbuffer1 = TextureUtil.generateTexture(512, 512)
   val gbuffer2 = TextureUtil.generateTexture(512, 512)
-  val fbo = initFramebuffer(gbuffer1, gbuffer2)
+  val gbuffer3 = TextureUtil.generateTexture(512, 512)
+  val fbo = initFramebuffer(gbuffer1, gbuffer2, gbuffer3)
 
-  compileShaders()
+  val (vertexOne, fragmentOne, programOne) = compileShaders("screen1.vert", "screen1.frag")
+  val (vertexGBuffer, fragmentGBuffer, programGBuffer) = compileShaders("gpass.vert", "gpass.frag")
   makeQuad()
   initTiles()
 
@@ -69,24 +81,28 @@ object Mind extends App {
 
   clean()
 
-
-  def initFramebuffer(textureId1: Int, textureId2: Int) = {
+  def initFramebuffer(textureId1: Int, textureId2: Int, textureId3: Int) = {
     val buffer =
       if (fboEnabled) {
         val buffer = ByteBuffer.allocateDirect(1 * 4).order(ByteOrder.nativeOrder()).asIntBuffer()
-        EXTFramebufferObject.glGenFramebuffersEXT(buffer)
+        GL30.glGenFramebuffers(buffer)
         buffer.get()
       } else {
         -1
       }
 
-    EXTFramebufferObject.glBindFramebufferEXT(EXTFramebufferObject.GL_FRAMEBUFFER_EXT, buffer)
-    EXTFramebufferObject.glFramebufferTexture2DEXT(EXTFramebufferObject.GL_FRAMEBUFFER_EXT, EXTFramebufferObject.GL_COLOR_ATTACHMENT0_EXT,
+    GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, buffer)
+    GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId1)
+    GL30.glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0,
       GL11.GL_TEXTURE_2D, textureId1, 0)
-    EXTFramebufferObject.glFramebufferTexture2DEXT(EXTFramebufferObject.GL_FRAMEBUFFER_EXT, EXTFramebufferObject.GL_COLOR_ATTACHMENT1_EXT,
-      GL11.GL_TEXTURE_2D, textureId1, 0)
+    GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId2)
+    GL30.glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT1,
+      GL11.GL_TEXTURE_2D, textureId2, 0)
+    GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId3)
+    GL30.glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT2,
+      GL11.GL_TEXTURE_2D, textureId3, 0)
 
-    EXTFramebufferObject.glBindFramebufferEXT(EXTFramebufferObject.GL_FRAMEBUFFER_EXT, 0)
+    GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0)
 
     buffer
   }
@@ -125,17 +141,93 @@ object Mind extends App {
     GL30.glDeleteVertexArrays(vaoId)
 
     GL20.glUseProgram(0)
-    GL20.glDetachShader(program, vertexShader)
-    GL20.glDetachShader(program, fragmentShader)
+    GL20.glDetachShader(programOne, vertexOne)
+    GL20.glDetachShader(programOne, fragmentOne)
 
-    GL20.glDeleteShader(vertexShader)
-    GL20.glDeleteShader(fragmentShader)
-    GL20.glDeleteProgram(program)
+    GL20.glDeleteShader(vertexOne)
+    GL20.glDeleteShader(fragmentOne)
+    GL20.glDeleteProgram(programOne)
+
+    GL20.glDetachShader(programGBuffer, vertexGBuffer)
+    GL20.glDetachShader(programGBuffer, vertexGBuffer)
+
+    GL20.glDeleteShader(vertexGBuffer)
+    GL20.glDeleteShader(vertexGBuffer)
+    GL20.glDeleteProgram(programGBuffer)
 
     Display.destroy()
   }
 
+  def initFullscreenQuad() = {
+
+    val a = 0.2f
+    val vertices = Array[Float](
+      // Left bottom triangle
+      a, -a, 0f,
+      -a, -a, 0f,
+      -a, a, 0f,
+      a, a, 0f
+    )
+    // Sending data to OpenGL requires the usage of (flipped) byte buffers
+    val verticesBuffer = BufferUtils.createFloatBuffer(vertices.length)
+    verticesBuffer.put(vertices)
+    verticesBuffer.flip()
+
+    val indices = Array[Byte](
+      0, 1, 2,
+      2, 3, 0
+    )
+
+    val indicesCount = indices.length
+    val indicesBuffer = BufferUtils.createByteBuffer(indicesCount)
+    indicesBuffer.put(indices)
+    indicesBuffer.flip()
+
+    val uv = Array[Float](
+      1, 0,
+      0, 0,
+      0, 1,
+      1, 1
+    )
+
+    val uvBuffer = BufferUtils.createFloatBuffer(uv.length)
+    uvBuffer.put(uv)
+    uvBuffer.flip()
+
+    val fullscrenVAO = GL30.glGenVertexArrays()
+    GL30.glBindVertexArray(fullscrenVAO)
+
+    // Create a new Vertex Buffer Object in memory and select it (bind)
+    // A VBO is a collection of Vectors which in this case resemble the location of each vertex.
+    val fullscrenVBO = GL15.glGenBuffers()
+    GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, fullscrenVBO)
+    GL15.glBufferData(GL15.GL_ARRAY_BUFFER, verticesBuffer, GL15.GL_STATIC_DRAW)
+    // Put the VBO in the attributes list at index 0
+    GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, 0, 0)
+    GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0)
+
+    val fullscreenVBOUV = GL15.glGenBuffers()
+    GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, fullscreenVBOUV)
+    GL15.glBufferData(GL15.GL_ARRAY_BUFFER, uvBuffer, GL15.GL_STATIC_DRAW)
+    GL20.glVertexAttribPointer(1, 2, GL11.GL_FLOAT, false, 0, 0)
+    GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0)
+
+    GL20.glEnableVertexAttribArray(0)
+    GL20.glEnableVertexAttribArray(1)
+
+    // Deselect (bind to 0) the VAO
+    GL30.glBindVertexArray(0)
+
+    val fullscrenIndicies = GL15.glGenBuffers()
+    GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, fullscrenIndicies)
+    GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, indicesBuffer, GL15.GL_STATIC_DRAW)
+    GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0)
+
+    (fullscrenVAO, fullscrenVBO, fullscrenIndicies, fullscreenVBOUV, indicesCount)
+  }
+
   def makeQuad() {
+
     // OpenGL expects vertices to be defined counter clockwise by default
     val vertices = Array[Float](
       // Left bottom triangle
@@ -235,25 +327,21 @@ object Mind extends App {
   def drawWithShader() {
     GL11.glClear(GL11.GL_COLOR_BUFFER_BIT)
     if (useShader) {
-      ARBShaderObjects.glUseProgramObjectARB(program)
+      ARBShaderObjects.glUseProgramObjectARB(programGBuffer)
 
-      val locTime: Int = GL20.glGetUniformLocation(program, "time")
+      val locTime: Int = GL20.glGetUniformLocation(programGBuffer, "time")
       GL20.glUniform1f(locTime, t)
 
-      val screenInfo = GL20.glGetUniformLocation(program, "screen")
+      val screenInfo = GL20.glGetUniformLocation(programGBuffer, "screen")
       GL20.glUniform4f(screenInfo, w, h, 0f, 0f)
 
-      val lights = GL20.glGetUniformLocation(program, "lights")
-      val (l, c) = getLights()
-      GL20.glUniform2(lights, l)
-
-      val uvScalars = GL20.glGetUniformLocation(program, "uvScalars")
+      val uvScalars = GL20.glGetUniformLocation(programGBuffer, "uvScalars")
       GL20.glUniform2f(uvScalars, sprites16x16.sizeWidth, sprites16x16.sizeHeight)
 
-      val normLocation = GL20.glGetUniformLocation(program, "norm")
-      val texLocation = GL20.glGetUniformLocation(program, "tex")
-      val specLocation = GL20.glGetUniformLocation(program, "specular")
-      val heightLocation = GL20.glGetUniformLocation(program, "heightMap")
+      val normLocation = GL20.glGetUniformLocation(programGBuffer, "norm")
+      val texLocation = GL20.glGetUniformLocation(programGBuffer, "tex")
+      val specLocation = GL20.glGetUniformLocation(programGBuffer, "specular")
+      val heightLocation = GL20.glGetUniformLocation(programGBuffer, "heightMap")
 
       GL20.glUniform1i(normLocation, 0)
       GL20.glUniform1i(texLocation, 2)
@@ -282,8 +370,19 @@ object Mind extends App {
 
     GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vboiId)
 
-    val posLocation = GL20.glGetUniformLocation(program, "position")
-    val uvPosition = GL20.glGetUniformLocation(program, "uvPosition")
+    GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, fbo)
+    val indi = Array[Int](GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2)
+    val indibuffer = BufferUtils.createIntBuffer(indi.length)
+    indibuffer.put(indi)
+    indibuffer.flip()
+    glDrawBuffers(indibuffer)
+
+
+    GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT)
+    GL11.glDisable(GL11.GL_DEPTH_TEST)
+
+    val posLocation = GL20.glGetUniformLocation(programGBuffer, "position")
+    val uvPosition = GL20.glGetUniformLocation(programGBuffer, "uvPosition")
 
     for (tile <- tileManager.tiles) {
       val (i, j) = tile.texture
@@ -292,6 +391,33 @@ object Mind extends App {
       GL20.glUniform2f(posLocation, x, y)
       GL11.glDrawElements(GL11.GL_TRIANGLES, indicesCount, GL11.GL_UNSIGNED_BYTE, 0)
     }
+
+    GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, 0)
+
+    ARBShaderObjects.glUseProgramObjectARB(programOne)
+
+    // bind the gbuffer to a texture
+    val gbuffer1Location = GL20.glGetUniformLocation(programOne, "g1")
+    GL20.glUniform1i(gbuffer1Location, 0)
+    GL13.glActiveTexture(GL13.GL_TEXTURE0 + 0)
+    GL11.glBindTexture(GL11.GL_TEXTURE_2D, gbuffer1)
+    GL33.glBindSampler(0, GL11.GL_NEAREST)
+
+    val gbuffer2Location = GL20.glGetUniformLocation(programOne, "g2")
+    GL20.glUniform1i(gbuffer2Location, 2)
+    GL13.glActiveTexture(GL13.GL_TEXTURE0 + 2)
+    GL11.glBindTexture(GL11.GL_TEXTURE_2D, gbuffer2)
+    GL33.glBindSampler(2, GL11.GL_NEAREST)
+
+    val gbuffer3Location = GL20.glGetUniformLocation(programOne, "g3")
+    GL20.glUniform1i(gbuffer3Location, 4)
+    GL13.glActiveTexture(GL13.GL_TEXTURE0 + 4)
+    GL11.glBindTexture(GL11.GL_TEXTURE_2D, gbuffer3)
+    GL33.glBindSampler(4, GL11.GL_NEAREST)
+
+    GL30.glBindVertexArray(fullscrenVAO)
+    GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, fullscrenIndicies)
+    GL11.glDrawElements(GL11.GL_TRIANGLES, indicesCount, GL11.GL_UNSIGNED_BYTE, 0)
 
     // Put everything back to default (deselect)
     //  GL20.glDisableVertexAttribArray(0)
@@ -328,48 +454,40 @@ object Mind extends App {
     GL11.glHint(GL11.GL_PERSPECTIVE_CORRECTION_HINT, GL11.GL_NICEST)
   }
 
-  def compileShaders() {
+  def compileShaders(vertex: String, fragment: String): (Int, Int, Int) = {
     var vertShader: Int = 0
     var fragShader: Int = 0
 
+    val none = (0, 0, 0)
 
-    try {
-      vertShader = ShaderUtil.createShader("shaders/screen.vert", ARBVertexShader.GL_VERTEX_SHADER_ARB)
-      fragShader = ShaderUtil.createShader("shaders/screen.frag", ARBFragmentShader.GL_FRAGMENT_SHADER_ARB)
-    }
-    catch {
-      case exc: Exception => {
-        exc.printStackTrace
-        return
-      }
-    }
-    finally {
-      if (vertShader == 0 || fragShader == 0) return
-    }
+    vertShader = ShaderUtil.createShader("shaders/" + vertex, ARBVertexShader.GL_VERTEX_SHADER_ARB)
+    fragShader = ShaderUtil.createShader("shaders/" + fragment, ARBFragmentShader.GL_FRAGMENT_SHADER_ARB)
 
-    program = ARBShaderObjects.glCreateProgramObjectARB
 
-    if (program == 0) return
+    val program = ARBShaderObjects.glCreateProgramObjectARB
+
+    if (program == 0) return none
 
     ARBShaderObjects.glAttachObjectARB(program, vertShader)
     ARBShaderObjects.glAttachObjectARB(program, fragShader)
     ARBShaderObjects.glLinkProgramARB(program)
 
-    GL20.glBindAttribLocation(program, 0, "in_Position")
-    GL20.glBindAttribLocation(program, 1, "in_Color")
+    //GL20.glBindAttribLocation(program, 0, "in_Position")
+    // GL20.glBindAttribLocation(program, 1, "in_Color")
 
     if (ARBShaderObjects.glGetObjectParameteriARB(program, ARBShaderObjects.GL_OBJECT_LINK_STATUS_ARB) == GL11.GL_FALSE) {
       System.err.println(ShaderUtil.getLogInfo(program))
-      return
+      return none
     }
     ARBShaderObjects.glValidateProgramARB(program)
 
     if (ARBShaderObjects.glGetObjectParameteriARB(program, ARBShaderObjects.GL_OBJECT_VALIDATE_STATUS_ARB) == GL11.GL_FALSE) {
       System.err.println(ShaderUtil.getLogInfo(program))
-      return
+      return none
     }
     useShader = true
-    vertexShader = vertShader
-    fragmentShader = fragShader
+    val vertexShader = vertShader
+    val fragmentShader = fragShader
+    (vertexShader, fragmentShader, program)
   }
 }
