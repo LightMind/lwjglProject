@@ -338,6 +338,14 @@ object Mind extends App {
     (lightBuffer, lightsCount)
   }
 
+  def setTextureUniform(program: Int, name: String, textureID: Int, index: Int) {
+    val location = glGetUniformLocation(program, name)
+    glUniform1i(location, index)
+    glActiveTexture(GL_TEXTURE0 + index)
+    GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID)
+    GL33.glBindSampler(0, GL11.GL_NEAREST)
+  }
+
   def drawWithShader() {
     GL11.glClear(GL11.GL_COLOR_BUFFER_BIT)
     if (useShader) {
@@ -352,31 +360,11 @@ object Mind extends App {
       val uvScalars = GL20.glGetUniformLocation(programGBuffer, "uvScalars")
       GL20.glUniform2f(uvScalars, sprites16x16.sizeWidth, sprites16x16.sizeHeight)
 
-      val normLocation = GL20.glGetUniformLocation(programGBuffer, "norm")
-      val texLocation = GL20.glGetUniformLocation(programGBuffer, "tex")
-      val specLocation = GL20.glGetUniformLocation(programGBuffer, "specular")
-      val heightLocation = GL20.glGetUniformLocation(programGBuffer, "heightMap")
+      setTextureUniform(programGBuffer, "norm", normalTexId, 0)
+      setTextureUniform(programGBuffer, "tex", texId, 2)
+      setTextureUniform(programGBuffer, "specular", specularTexId, 4)
+      setTextureUniform(programGBuffer, "heightMap", heightmapTexId, 6)
 
-      GL20.glUniform1i(normLocation, 0)
-      GL20.glUniform1i(texLocation, 2)
-      GL20.glUniform1i(specLocation, 4)
-      GL20.glUniform1i(heightLocation, 6)
-
-      GL13.glActiveTexture(GL13.GL_TEXTURE0 + 0)
-      GL11.glBindTexture(GL11.GL_TEXTURE_2D, normalTexId)
-      GL33.glBindSampler(0, GL11.GL_NEAREST)
-
-      GL13.glActiveTexture(GL13.GL_TEXTURE0 + 2)
-      GL11.glBindTexture(GL11.GL_TEXTURE_2D, texId)
-      GL33.glBindSampler(2, GL11.GL_NEAREST)
-
-      GL13.glActiveTexture(GL13.GL_TEXTURE0 + 4)
-      GL11.glBindTexture(GL11.GL_TEXTURE_2D, specularTexId)
-      GL33.glBindSampler(4, GL11.GL_NEAREST)
-
-      GL13.glActiveTexture(GL13.GL_TEXTURE0 + 6)
-      GL11.glBindTexture(GL11.GL_TEXTURE_2D, heightmapTexId)
-      GL33.glBindSampler(6, GL11.GL_NEAREST)
     }
 
     // Bind to the VAO that has all the information about the quad vertices
@@ -390,7 +378,6 @@ object Mind extends App {
     indibuffer.put(indi)
     indibuffer.flip()
     glDrawBuffers(indibuffer)
-
 
     GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT)
     GL11.glDisable(GL11.GL_DEPTH_TEST)
