@@ -62,10 +62,10 @@ object Mind extends App {
   val sprites16x16 = new SpriteMap(16, 16)
 
   val fboEnabled = GLContext.getCapabilities().GL_EXT_framebuffer_object
-  val gbuffer1 = TextureUtil.generateTexture(512, 512)
-  val gbuffer2 = TextureUtil.generateTexture(512, 512)
-  val gbuffer3 = TextureUtil.generateTexture(512, 512)
-  val fbo = initFramebuffer(gbuffer1, gbuffer2, gbuffer3)
+  val gbuffer1 = TextureUtil.generateTexture(w, h)
+  val gbuffer2 = TextureUtil.generateTexture(w, h)
+  val gbuffer3 = TextureUtil.generateTexture(w, h)
+  val fbo = initFramebuffer(Array(gbuffer1, gbuffer2, gbuffer3))
 
   val (vertexOne, fragmentOne, programOne) = compileShaders("screen1.vert", "screen1.frag")
   val (vertexGBuffer, fragmentGBuffer, programGBuffer) = compileShaders("gpass.vert", "gpass.frag")
@@ -158,7 +158,7 @@ object Mind extends App {
 
   def initFullscreenQuad() = {
 
-    val a = 0.2f
+    val a = 1f
     val vertices = Array[Float](
       // Left bottom triangle
       a, -a, 0f,
