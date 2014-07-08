@@ -81,7 +81,8 @@ object Mind extends App {
 
   clean()
 
-  def initFramebuffer(textureId1: Int, textureId2: Int, textureId3: Int) = {
+  def initFramebuffer(textureIDs: Array[Int]) = {
+    val attachments = Array[Int](GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4, GL_COLOR_ATTACHMENT5, GL_COLOR_ATTACHMENT6, GL_COLOR_ATTACHMENT7)
     val buffer =
       if (fboEnabled) {
         val buffer = ByteBuffer.allocateDirect(1 * 4).order(ByteOrder.nativeOrder()).asIntBuffer()
@@ -91,16 +92,13 @@ object Mind extends App {
         -1
       }
 
-    GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, buffer)
-    GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId1)
-    GL30.glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0,
-      GL11.GL_TEXTURE_2D, textureId1, 0)
-    GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId2)
-    GL30.glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT1,
-      GL11.GL_TEXTURE_2D, textureId2, 0)
-    GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId3)
-    GL30.glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT2,
-      GL11.GL_TEXTURE_2D, textureId3, 0)
+
+    for (i <- 0 until textureIDs.length.min(8)) {
+      GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, buffer)
+      GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureIDs(1))
+      GL30.glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0,
+        GL11.GL_TEXTURE_2D, attachments(1), 0)
+    }
 
     GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0)
 
