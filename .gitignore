@@ -2,3 +2,4 @@ out/*
 .idea/*
 *.class
 .lwjglProject.iml
+src/test*
