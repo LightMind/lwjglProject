@@ -416,6 +416,8 @@ object Mind extends App {
     GL11.glBindTexture(GL11.GL_TEXTURE_2D, gbuffer3)
     GL33.glBindSampler(4, GL11.GL_NEAREST)
 
+    glDrawBuffers(GL_COLOR_ATTACHMENT0)
+
     GL30.glBindVertexArray(fullscrenVAO)
     GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, fullscrenIndicies)
     GL11.glDrawElements(GL11.GL_TRIANGLES, indicesCount, GL11.GL_UNSIGNED_BYTE, 0)
