@@ -11,6 +11,7 @@ import org.lwjgl.util.glu.GLU
 import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.GL12._
 import org.lwjgl.opengl.GL13._
+import org.lwjgl.opengl.GL15._
 import org.lwjgl.opengl.GL20._
 import org.lwjgl.opengl.GL21._
 import org.lwjgl.opengl.GL30._
@@ -126,8 +127,6 @@ object Mind extends App {
     // Delete the vertex VBO
     GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0)
     GL15.glDeleteBuffers(vboId)
-
-    GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0)
     GL15.glDeleteBuffers(vbocId)
 
     // Delete the index VBO
@@ -137,6 +136,13 @@ object Mind extends App {
     // Delete the VAO
     GL30.glBindVertexArray(0)
     GL30.glDeleteVertexArrays(vaoId)
+
+    GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0)
+    glDeleteBuffers(fullscrenVBO)
+    glDeleteBuffers(fullscreenVBOUV)
+    glDeleteBuffers(fullscrenIndicies)
+
+    glDeleteVertexArrays(fullscrenVAO)
 
     GL20.glUseProgram(0)
     GL20.glDetachShader(programOne, vertexOne)
@@ -152,6 +158,16 @@ object Mind extends App {
     GL20.glDeleteShader(vertexGBuffer)
     GL20.glDeleteShader(vertexGBuffer)
     GL20.glDeleteProgram(programGBuffer)
+
+    glBindTexture(GL_TEXTURE_2D, 0)
+    glDeleteTextures(normalTexId)
+    glDeleteTextures(heightmapTexId)
+    glDeleteTextures(specularTexId)
+    glDeleteTextures(texId)
+
+    glDeleteTextures(gbuffer1)
+    glDeleteTextures(gbuffer2)
+    glDeleteTextures(gbuffer3)
 
     Display.destroy()
   }
