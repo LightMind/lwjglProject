@@ -1,6 +1,7 @@
 #version 330
 
-uniform sampler2D g1;
+uniform sampler2D lightBuffer;
+uniform sampler2D diffuseBuffer;
 
 out vec4 glc;
 
@@ -10,7 +11,10 @@ in Data {
 } In;
 
 void main(){
-    glc = texture(g1,In.uv);
+    vec4 ambient = vec4(0.2,0.2,0.3,1.0)*0.2;
+    vec4 diffuse = texture(diffuseBuffer,In.uv);
+    vec4 light = texture(lightBuffer,In.uv);
+    glc = light + ambient*diffuse;
 }
 
 

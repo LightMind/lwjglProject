@@ -42,14 +42,12 @@ void main(){
     float distance = length(toLight);
 
     float nDotL =  max(0.0,dot(normalize(toLight),normal));
-    float falloff = getFalloff(distance*0.1) - getFalloff(radius*0.1);
-    vec3 diffuseComponent = vec3(nDotL * falloff);
+    float falloff = getFalloff(distance*0.001) - getFalloff(radius*0.001);
+    vec3 diffuseComponent = vec3(nDotL * falloff) * texture(g1,uv).rgb;
 
     vec3 t =  normalize(vec3(0.0,1.0,0.0) + toLight);
     float specular = pow(max(0.0,dot(normal,t)),3.5);
     vec3 specularComponent = specular*specVal;
-
-
 
     glc = vec4(specularComponent + diffuseComponent,1.0);
 }

@@ -86,7 +86,6 @@ void main(){
         vec2 toLightOnTexture = lightZero - scp;
         toLightOnTexture = toLightOnTexture/(512*32);
 
-
         float height0 = texture(heightMap,uv+toLightOnTexture*0.1666).x;
         float height1 = texture(heightMap,uv+toLightOnTexture*0.33).x;
         float height2 = texture(heightMap,uv+toLightOnTexture*0.66).x;

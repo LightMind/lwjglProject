@@ -303,7 +303,8 @@ object Mind extends App {
     glBindFramebuffer(GL_FRAMEBUFFER, 0)
     glUseProgram(programTwo.program)
 
-    setTextureUniform(programTwo.program, "g1", lightAccumulation.id, 0)
+    setTextureUniform(programTwo.program, "lightBuffer", lightAccumulation.id, 0)
+    setTextureUniform(programTwo.program, "diffuseBuffer", gbuffer1.id, 2)
 
     GL30.glBindVertexArray(fullscreenVAO.id)
     checkError("Binding circle VAO")
