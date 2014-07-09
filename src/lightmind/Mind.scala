@@ -45,7 +45,7 @@ object Mind extends App {
 
   val sprites16x16 = new SpriteMap(16, 16)
 
-  val (fullscrenVAO, fullscrenVBO, fullscrenIndicies, fullscreenVBOUV, fullscrenIndicesCount) = GeometryUtil.initFullscreenQuad()
+  val fullscreenVAO = GeometryUtil.initFullscreenQuad()
   val (vaoId, vboId, vertexCount, vbouvId, vboiId, indicesCount) = GeometryUtil.makeQuad(ws, hs, adj, sprites16x16)
 
   val textures = loadTextures
@@ -159,12 +159,7 @@ object Mind extends App {
     GL30.glBindVertexArray(0)
     GL30.glDeleteVertexArrays(vaoId)
 
-    GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0)
-    glDeleteBuffers(fullscrenVBO)
-    glDeleteBuffers(fullscreenVBOUV)
-    glDeleteBuffers(fullscrenIndicies)
-
-    glDeleteVertexArrays(fullscrenVAO)
+    fullscreenVAO.destroy()
 
     programGBuffer.destroy()
     programOne.destroy()
@@ -281,9 +276,9 @@ object Mind extends App {
     setTextureUniform(programOne.program, "g2", gbuffer2.id, 2)
     setTextureUniform(programOne.program, "g3", gbuffer3.id, 4)
 
-    GL30.glBindVertexArray(fullscrenVAO)
+    GL30.glBindVertexArray(fullscreenVAO.id)
     checkError("Binding fullscreen VAO")
-    GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, fullscrenIndicies)
+    GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, fullscreenVAO.indices)
     checkError("Bind indices for fullscreen vbo")
     GL11.glDrawElements(GL11.GL_TRIANGLES, indicesCount, GL11.GL_UNSIGNED_BYTE, 0)
     checkError("Done drawing fullscreen quad")

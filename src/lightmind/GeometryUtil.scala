@@ -1,5 +1,6 @@
 package lightmind
 
+import lightmind.opengl.VertexArrayObject
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.{GL11, GL20, GL15, GL30}
 import org.lwjgl.opengl.GL11._
@@ -78,7 +79,7 @@ object GeometryUtil {
     checkError("Uploading indicies for fullscreen")
     GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0)
 
-    (fullscrenVAO, fullscrenVBO, fullscrenIndicies, fullscreenVBOUV, indicesCount)
+    new VertexArrayObject(fullscrenVAO, fullscrenIndicies, indicesCount, Array(fullscrenVBO, fullscreenVBOUV))
   }
 
   def makeQuad(ws: Float, hs: Float, adj: Float, sprites: SpriteMap) = {
