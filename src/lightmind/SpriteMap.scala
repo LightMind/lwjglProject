@@ -27,10 +27,7 @@ class SpriteMap(tilesRight: Int, tilesDown: Int) {
       1, 1
     )
 
-    val uvBuffer = BufferUtils.createFloatBuffer(uv.length)
-    uvBuffer.put(uv)
-    uvBuffer.flip()
-    uvBuffer
+    toBuffer(uv)
   }
 
   def getBuffer(i: Int, j: Int) = {
@@ -44,10 +41,7 @@ class SpriteMap(tilesRight: Int, tilesDown: Int) {
       sizeWidth * (left + 1), sizeHeight * (top + 1)
     )
 
-    val uvBuffer = BufferUtils.createFloatBuffer(uv.length)
-    uvBuffer.put(uv)
-    uvBuffer.flip()
-    uvBuffer
+    toBuffer(uv)
   }
 
 }
