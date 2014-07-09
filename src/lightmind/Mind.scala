@@ -75,8 +75,8 @@ object Mind extends App {
   checkError("Gbuffers done?")
   val fbo: Int = initFramebuffer(Array(gbuffer1, gbuffer2, gbuffer3))
 
-  val (vertexOne, fragmentOne, programOne) = compileShaders("screen1.vert", "screen1.frag")
-  val (vertexGBuffer, fragmentGBuffer, programGBuffer) = compileShaders("gpass.vert", "gpass.frag")
+  val programOne = compileShaders("screen1.vert", "screen1.frag")
+  val programGBuffer = compileShaders("gpass.vert", "gpass.frag")
   makeQuad()
   initTiles()
 
@@ -175,20 +175,8 @@ object Mind extends App {
 
     glDeleteVertexArrays(fullscrenVAO)
 
-    GL20.glUseProgram(0)
-    GL20.glDetachShader(programOne, vertexOne)
-    GL20.glDetachShader(programOne, fragmentOne)
-
-    GL20.glDeleteShader(vertexOne)
-    GL20.glDeleteShader(fragmentOne)
-    GL20.glDeleteProgram(programOne)
-
-    GL20.glDetachShader(programGBuffer, vertexGBuffer)
-    GL20.glDetachShader(programGBuffer, vertexGBuffer)
-
-    GL20.glDeleteShader(vertexGBuffer)
-    GL20.glDeleteShader(vertexGBuffer)
-    GL20.glDeleteProgram(programGBuffer)
+    programGBuffer.destroy()
+    programOne.destroy()
 
     glBindTexture(GL_TEXTURE_2D, 0)
     normalTexId.destroy()
@@ -391,28 +379,28 @@ object Mind extends App {
     GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     checkError("clearing color buffer")
     if (useShader) {
-      ARBShaderObjects.glUseProgramObjectARB(programGBuffer)
+      ARBShaderObjects.glUseProgramObjectARB(programGBuffer.program)
       checkError("Using g buffer program")
 
-      val locTime: Int = GL20.glGetUniformLocation(programGBuffer, "time")
+      val locTime: Int = GL20.glGetUniformLocation(programGBuffer.program, "time")
       GL20.glUniform1f(locTime, t)
 
       checkError("Setting time uniform")
 
-      val screenInfo = GL20.glGetUniformLocation(programGBuffer, "screen")
+      val screenInfo = GL20.glGetUniformLocation(programGBuffer.program, "screen")
       GL20.glUniform4f(screenInfo, w, h, 0f, 0f)
 
       checkError("Setting screen uniform")
 
-      val uvScalars = GL20.glGetUniformLocation(programGBuffer, "uvScalars")
+      val uvScalars = GL20.glGetUniformLocation(programGBuffer.program, "uvScalars")
       GL20.glUniform2f(uvScalars, sprites16x16.sizeWidth, sprites16x16.sizeHeight)
 
       checkError("Setting uvScalars uniform")
 
-      setTextureUniform(programGBuffer, "norm", normalTexId.id, 0)
-      setTextureUniform(programGBuffer, "tex", texId.id, 2)
-      setTextureUniform(programGBuffer, "specular", specularTexId.id, 4)
-      setTextureUniform(programGBuffer, "heightMap", heightmapTexId.id, 6)
+      setTextureUniform(programGBuffer.program, "norm", normalTexId.id, 0)
+      setTextureUniform(programGBuffer.program, "tex", texId.id, 2)
+      setTextureUniform(programGBuffer.program, "specular", specularTexId.id, 4)
+      setTextureUniform(programGBuffer.program, "heightMap", heightmapTexId.id, 6)
       checkError("setting texture uniforms")
 
     }
@@ -438,8 +426,8 @@ object Mind extends App {
     GL11.glDisable(GL11.GL_DEPTH_TEST)
     checkError("Disable depth test (again)")
 
-    val posLocation = GL20.glGetUniformLocation(programGBuffer, "position")
-    val uvPosition = GL20.glGetUniformLocation(programGBuffer, "uvPosition")
+    val posLocation = GL20.glGetUniformLocation(programGBuffer.program, "position")
+    val uvPosition = GL20.glGetUniformLocation(programGBuffer.program, "uvPosition")
 
     for (tile <- tileManager.tiles) {
       val (i, j) = tile.texture
@@ -454,12 +442,12 @@ object Mind extends App {
     GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0)
     GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0)
 
-    ARBShaderObjects.glUseProgramObjectARB(programOne)
+    ARBShaderObjects.glUseProgramObjectARB(programOne.program)
 
     // bind the gbuffer to a texture
-    setTextureUniform(programOne, "g1", gbuffer1.id, 0)
-    setTextureUniform(programOne, "g2", gbuffer2.id, 2)
-    setTextureUniform(programOne, "g3", gbuffer3.id, 4)
+    setTextureUniform(programOne.program, "g1", gbuffer1.id, 0)
+    setTextureUniform(programOne.program, "g2", gbuffer2.id, 2)
+    setTextureUniform(programOne.program, "g3", gbuffer3.id, 4)
 
     GL30.glBindVertexArray(fullscrenVAO)
     checkError("Binding fullscreen VAO")
@@ -527,11 +515,11 @@ object Mind extends App {
     GL11.glHint(GL11.GL_PERSPECTIVE_CORRECTION_HINT, GL11.GL_NICEST)
   }
 
-  def compileShaders(vertex: String, fragment: String): (Int, Int, Int) = {
+  def compileShaders(vertex: String, fragment: String): ShaderProgram = {
     var vertShader: Int = 0
     var fragShader: Int = 0
 
-    val none = (0, 0, 0)
+    val none = new ShaderProgram(0, 0, 0)
 
     vertShader = ShaderUtil.createShader("shaders/" + vertex, ARBVertexShader.GL_VERTEX_SHADER_ARB)
     fragShader = ShaderUtil.createShader("shaders/" + fragment, ARBFragmentShader.GL_FRAGMENT_SHADER_ARB)
@@ -557,6 +545,6 @@ object Mind extends App {
     useShader = true
     val vertexShader = vertShader
     val fragmentShader = fragShader
-    (vertexShader, fragmentShader, program)
+    new ShaderProgram(program, vertexShader, fragmentShader)
   }
 }
