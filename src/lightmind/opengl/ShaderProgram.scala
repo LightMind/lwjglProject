@@ -12,7 +12,10 @@ import org.lwjgl.opengl.GL32._
 import org.lwjgl.opengl.GL33._
 
 class ShaderProgram(val program: Int, val vertexShader: Int, val fragmentShader: Int) {
+  var alive = true
+
   def destroy() {
+    if (!alive) return
     glUseProgram(0)
     glDetachShader(program, vertexShader)
     glDetachShader(program, fragmentShader)
@@ -20,5 +23,6 @@ class ShaderProgram(val program: Int, val vertexShader: Int, val fragmentShader:
     glDeleteShader(program)
     glDeleteShader(fragmentShader)
     glDeleteProgram(vertexShader)
+    alive = false
   }
 }

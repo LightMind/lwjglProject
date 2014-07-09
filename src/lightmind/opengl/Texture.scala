@@ -8,5 +8,6 @@ class Texture(val id: Int) {
   def destroy() {
     if (!alive) return
     glDeleteTextures(id)
+    alive = false
   }
 }
