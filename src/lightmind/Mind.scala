@@ -56,10 +56,16 @@ object Mind extends App {
   val (fullscrenVAO, fullscrenVBO, fullscrenIndicies, fullscreenVBOUV, fullscrenIndicesCount) = initFullscreenQuad()
 
   println("Loading textures")
-  val normalTexId = TextureUtil.loadPNGTexture("res/sprite1-normal.png", 0)
-  val texId = TextureUtil.loadPNGTexture("res/sprite1-color.png", 0)
-  val specularTexId = TextureUtil.loadPNGTexture("res/sprite1-specular.png", 0)
-  val heightmapTexId = TextureUtil.loadPNGTexture("res/sprite1-height.png", 0)
+  val textures = loadTextures
+
+  def loadTextures = {
+    val normalTexId = TextureUtil.loadPNGTexture("res/sprite1-normal.png", 0)
+    val texId = TextureUtil.loadPNGTexture("res/sprite1-color.png", 0)
+    val specularTexId = TextureUtil.loadPNGTexture("res/sprite1-specular.png", 0)
+    val heightmapTexId = TextureUtil.loadPNGTexture("res/sprite1-height.png", 0)
+    List(normalTexId, texId, specularTexId, heightmapTexId)
+  }
+
 
   println("Sprite Map")
   val sprites16x16 = new SpriteMap(16, 16)
@@ -177,10 +183,7 @@ object Mind extends App {
     programOne.destroy()
 
     glBindTexture(GL_TEXTURE_2D, 0)
-    normalTexId.destroy()
-    heightmapTexId.destroy()
-    specularTexId.destroy()
-    texId.destroy()
+    textures.foreach(_.destroy())
 
     gbuffer1.destroy()
     gbuffer2.destroy()
@@ -395,10 +398,11 @@ object Mind extends App {
 
     checkError("Setting uvScalars uniform")
 
-    setTextureUniform(programGBuffer.program, "norm", normalTexId.id, 0)
-    setTextureUniform(programGBuffer.program, "tex", texId.id, 2)
-    setTextureUniform(programGBuffer.program, "specular", specularTexId.id, 4)
-    setTextureUniform(programGBuffer.program, "heightMap", heightmapTexId.id, 6)
+    val names = List("norm", "tex", "specular", "heightMap")
+
+    for (i <- 0 until 4) {
+      setTextureUniform(programGBuffer.program, names(i), textures(i).id, i * 2)
+    }
     checkError("setting texture uniforms")
 
 
