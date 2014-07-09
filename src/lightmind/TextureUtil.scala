@@ -72,15 +72,11 @@ object TextureUtil {
     (buf, tWidth, tHeight)
   }
 
-  def generateTexture(width: Int, height: Int, textureUnit:Int) = {
+  def generateTexture(width: Int, height: Int, textureUnit: Int) = {
     val texId = glGenTextures()
     GL13.glActiveTexture(GL_TEXTURE0 + textureUnit)
     glBindTexture(GL_TEXTURE_2D, texId)
     glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 1)
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
 
     val none: ByteBuffer = null
     GL11.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0,
