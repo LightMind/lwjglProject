@@ -544,4 +544,18 @@ object Mind extends App {
     val fragmentShader = fragShader
     new ShaderProgram(program, vertexShader, fragmentShader)
   }
+
+  def bufferUtil(values: Array[Int]) = {
+    val b = BufferUtils.createIntBuffer(values.length)
+    b.put(values)
+    b.flip()
+    b
+  }
+
+  def bufferUtil(values: Array[Float]) = {
+    val b = BufferUtils.createFloatBuffer(values.length)
+    b.put(values)
+    b.flip()
+    b
+  }
 }
