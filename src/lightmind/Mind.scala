@@ -205,7 +205,7 @@ object Mind extends App {
       a, a, 0f
     )
     // Sending data to OpenGL requires the usage of (flipped) byte buffers
-    val verticesBuffer = bufferUtil(vertices)
+    val verticesBuffer = toBuffer(vertices)
 
     val indices = Array[Byte](
       0, 1, 2,
@@ -213,7 +213,7 @@ object Mind extends App {
     )
 
     val indicesCount = indices.length
-    val indicesBuffer = bufferUtil(indices)
+    val indicesBuffer = toBuffer(indices)
 
     val uv = Array[Float](
       1, 0,
@@ -274,7 +274,7 @@ object Mind extends App {
       ws + adj, hs + adj, 0f
     )
     // Sending data to OpenGL requires the usage of (flipped) byte buffers
-    val verticesBuffer = bufferUtil(vertices)
+    val verticesBuffer = toBuffer(vertices)
     vertexCount = 4
 
     val indices = Array[Byte](
@@ -283,7 +283,7 @@ object Mind extends App {
     )
 
     indicesCount = indices.length
-    val indicesBuffer = bufferUtil(indices)
+    val indicesBuffer = toBuffer(indices)
 
     val colors = Array[Float](
       1f, 0f, 0f, 1f,
@@ -292,7 +292,7 @@ object Mind extends App {
       1f, 1f, 1f, 1f
     )
 
-    val colorsBuffer = bufferUtil(colors)
+    val colorsBuffer = toBuffer(colors)
 
     val uvBuffer = sprites16x16.getBuffer()
 
@@ -347,7 +347,7 @@ object Mind extends App {
       100f, 100f
     )
     // Sending data to OpenGL requires the usage of (flipped) byte buffers
-    val lightBuffer = bufferUtil(lights)
+    val lightBuffer = toBuffer(lights)
 
     val lightsCount = 4
     (lightBuffer, lightsCount)
@@ -404,7 +404,7 @@ object Mind extends App {
     checkError("Binding framebuffer")
 
     val indi = Array[Int](GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2)
-    val indibuffer = bufferUtil(indi)
+    val indibuffer = toBuffer(indi)
     glDrawBuffers(indibuffer)
 
     GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT)
@@ -528,26 +528,5 @@ object Mind extends App {
     val vertexShader = vertShader
     val fragmentShader = fragShader
     new ShaderProgram(program, vertexShader, fragmentShader)
-  }
-
-  def bufferUtil(values: Array[Int]) = {
-    val b = BufferUtils.createIntBuffer(values.length)
-    b.put(values)
-    b.flip()
-    b
-  }
-
-  def bufferUtil(values: Array[Byte]) = {
-    val b = BufferUtils.createByteBuffer(values.length)
-    b.put(values)
-    b.flip()
-    b
-  }
-
-  def bufferUtil(values: Array[Float]) = {
-    val b = BufferUtils.createFloatBuffer(values.length)
-    b.put(values)
-    b.flip()
-    b
   }
 }
