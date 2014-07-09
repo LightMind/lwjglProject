@@ -25,7 +25,7 @@ import Mind.checkError
  * Created by Lukas on 02-07-14.
  */
 object TextureUtil {
-  def loadPNGTexture(filename: String, textureUnit: Int): Int = {
+  def loadPNGTexture(filename: String, textureUnit: Int): Texture = {
     val (buf, width, height) = loadTexture(filename)
     val texID = GL11.glGenTextures()
     checkError("LoadPNG: creating texture")
@@ -44,11 +44,11 @@ object TextureUtil {
     checkError("LoadPNG: using nearest as min filter")
     GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST)
     checkError("LoadPNG: using nearest as mag filter")
-    texID
+    new Texture(texID)
   }
 
   def loadTexture(filename: String) = {
-    var buf: ByteBuffer = null
+    var id: ByteBuffer = null
     var tWidth = 0
     var tHeight = 0
 
@@ -63,14 +63,14 @@ object TextureUtil {
       tHeight = decoder.getHeight()
 
       // Decode the PNG file in a ByteBuffer
-      buf = ByteBuffer.allocateDirect(
+      id = ByteBuffer.allocateDirect(
         4 * decoder.getWidth() * decoder.getHeight())
-      decoder.decode(buf, decoder.getWidth() * 4, Format.RGBA)
-      buf.flip()
+      decoder.decode(id, decoder.getWidth() * 4, Format.RGBA)
+      id.flip()
 
       in.close()
     }
-    (buf, tWidth, tHeight)
+    (id, tWidth, tHeight)
   }
 
   def generateTexture(width: Int, height: Int, textureUnit: Int) = {

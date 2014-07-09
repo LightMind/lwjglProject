@@ -36,10 +36,6 @@ object Mind extends App {
   var vbouvId = 0
   var vertexCount = 0
   var indicesCount = 0
-  var normalTexId = 0
-  var heightmapTexId = 0
-  var texId = 0
-  var specularTexId = 0
   var close = false
 
   val scalarw = w / 64
@@ -62,10 +58,10 @@ object Mind extends App {
   val (fullscrenVAO, fullscrenVBO, fullscrenIndicies, fullscreenVBOUV, fullscrenIndicesCount) = initFullscreenQuad()
 
   println("Loading textures")
-  normalTexId = TextureUtil.loadPNGTexture("res/sprite1-normal.png", 0)
-  texId = TextureUtil.loadPNGTexture("res/sprite1-color.png", 0)
-  specularTexId = TextureUtil.loadPNGTexture("res/sprite1-specular.png", 0)
-  heightmapTexId = TextureUtil.loadPNGTexture("res/sprite1-height.png", 0)
+  val normalTexId = TextureUtil.loadPNGTexture("res/sprite1-normal.png", 0)
+  val texId = TextureUtil.loadPNGTexture("res/sprite1-color.png", 0)
+  val specularTexId = TextureUtil.loadPNGTexture("res/sprite1-specular.png", 0)
+  val heightmapTexId = TextureUtil.loadPNGTexture("res/sprite1-height.png", 0)
 
   println("Sprite Map")
   val sprites16x16 = new SpriteMap(16, 16)
@@ -195,10 +191,10 @@ object Mind extends App {
     GL20.glDeleteProgram(programGBuffer)
 
     glBindTexture(GL_TEXTURE_2D, 0)
-    glDeleteTextures(normalTexId)
-    glDeleteTextures(heightmapTexId)
-    glDeleteTextures(specularTexId)
-    glDeleteTextures(texId)
+    normalTexId.destroy()
+    heightmapTexId.destroy()
+    specularTexId.destroy()
+    texId.destroy()
 
     gbuffer1.destroy()
     gbuffer2.destroy()
@@ -413,10 +409,10 @@ object Mind extends App {
 
       checkError("Setting uvScalars uniform")
 
-      setTextureUniform(programGBuffer, "norm", normalTexId, 0)
-      setTextureUniform(programGBuffer, "tex", texId, 2)
-      setTextureUniform(programGBuffer, "specular", specularTexId, 4)
-      setTextureUniform(programGBuffer, "heightMap", heightmapTexId, 6)
+      setTextureUniform(programGBuffer, "norm", normalTexId.id, 0)
+      setTextureUniform(programGBuffer, "tex", texId.id, 2)
+      setTextureUniform(programGBuffer, "specular", specularTexId.id, 4)
+      setTextureUniform(programGBuffer, "heightMap", heightmapTexId.id, 6)
       checkError("setting texture uniforms")
 
     }
