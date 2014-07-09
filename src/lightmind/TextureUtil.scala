@@ -5,6 +5,7 @@ import java.nio.ByteBuffer
 
 import de.matthiasmann.twl.utils.PNGDecoder
 import de.matthiasmann.twl.utils.PNGDecoder.Format
+import lightmind.opengl.Texture
 import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.GL12._
 import org.lwjgl.opengl.{GL11, GL13}
@@ -84,6 +85,7 @@ object TextureUtil {
     glBindTexture(GL_TEXTURE_2D, 0)
 
     Mind.checkError("Generate Texture")
-    texId
+    val texture = new Texture(texId)
+    texture
   }
 }

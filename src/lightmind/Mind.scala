@@ -2,6 +2,7 @@ package lightmind
 
 import java.nio.{ByteBuffer, ByteOrder}
 
+import lightmind.opengl._
 import lightmind.terrain.TileManager
 import org.lwjgl.BufferUtils
 import org.lwjgl.input.Mouse
@@ -92,7 +93,7 @@ object Mind extends App {
 
   clean()
 
-  def initFramebuffer(textureIDs: Array[Int]): Int = {
+  def initFramebuffer(textureIDs: Array[Texture]): Int = {
     val attachments = Array[Int](GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4, GL_COLOR_ATTACHMENT5, GL_COLOR_ATTACHMENT6, GL_COLOR_ATTACHMENT7)
     val buffer =
       if (fboEnabled) {
@@ -110,10 +111,10 @@ object Mind extends App {
     for (i <- 0 until textureIDs.length.min(8)) {
       GL30.glBindFramebuffer(GL_FRAMEBUFFER, buffer)
       checkError("InitFBO binding framebuffer")
-      GL11.glBindTexture(GL_TEXTURE_2D, textureIDs(i))
+      GL11.glBindTexture(GL_TEXTURE_2D, textureIDs(i).id)
       checkError("InitFBO binding texture")
       GL30.glFramebufferTexture2D(GL_FRAMEBUFFER, attachments(i),
-        GL11.GL_TEXTURE_2D, textureIDs(i), 0)
+        GL11.GL_TEXTURE_2D, textureIDs(i).id, 0)
       checkError("InitFBO using texture2D")
     }
 
@@ -199,9 +200,9 @@ object Mind extends App {
     glDeleteTextures(specularTexId)
     glDeleteTextures(texId)
 
-    glDeleteTextures(gbuffer1)
-    glDeleteTextures(gbuffer2)
-    glDeleteTextures(gbuffer3)
+    gbuffer1.destroy()
+    gbuffer2.destroy()
+    gbuffer3.destroy()
 
     glDeleteSamplers(sampler)
 
@@ -460,9 +461,9 @@ object Mind extends App {
     ARBShaderObjects.glUseProgramObjectARB(programOne)
 
     // bind the gbuffer to a texture
-    setTextureUniform(programOne, "g1", gbuffer1, 0)
-    setTextureUniform(programOne, "g2", gbuffer2, 2)
-    setTextureUniform(programOne, "g3", gbuffer3, 4)
+    setTextureUniform(programOne, "g1", gbuffer1.id, 0)
+    setTextureUniform(programOne, "g2", gbuffer2.id, 2)
+    setTextureUniform(programOne, "g3", gbuffer3.id, 4)
 
     GL30.glBindVertexArray(fullscrenVAO)
     checkError("Binding fullscreen VAO")
