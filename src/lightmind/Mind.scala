@@ -27,13 +27,6 @@ object Mind extends App {
   val w = 1280
   val h = 720
   var t = 1.0f
-  var vaoId = 0
-  var vboId = 0
-  var vbocId = 0
-  var vboiId = 0
-  var vbouvId = 0
-  var vertexCount = 0
-  var indicesCount = 0
   var close = false
 
   val scalarw = w / 64
@@ -52,9 +45,12 @@ object Mind extends App {
 
   val sampler = initSampler()
 
-  println("Creating full screen quad.")
-  val (fullscrenVAO, fullscrenVBO, fullscrenIndicies, fullscreenVBOUV, fullscrenIndicesCount) = initFullscreenQuad()
+  println("Sprite Map")
+  val sprites16x16 = new SpriteMap(16, 16)
 
+  println("Creating full screen quad.")
+  val (fullscrenVAO, fullscrenVBO, fullscrenIndicies, fullscreenVBOUV, fullscrenIndicesCount) = GeometryUtil.initFullscreenQuad()
+  val (vaoId, vboId, vertexCount, vbouvId, vboiId, indicesCount) = GeometryUtil.makeQuad(ws, hs, adj, sprites16x16)
   println("Loading textures")
   val textures = loadTextures
 
@@ -66,9 +62,10 @@ object Mind extends App {
     List(normalTexId, texId, specularTexId, heightmapTexId)
   }
 
+  def quit() {
+    close = true
+  }
 
-  println("Sprite Map")
-  val sprites16x16 = new SpriteMap(16, 16)
 
   println("generating gbuffer textures")
   val fboEnabled = GLContext.getCapabilities().GL_EXT_framebuffer_object
@@ -81,7 +78,7 @@ object Mind extends App {
 
   val programOne = compileShaders("screen1.vert", "screen1.frag")
   val programGBuffer = compileShaders("gpass.vert", "gpass.frag")
-  makeQuad()
+
   initTiles()
 
   while (!Display.isCloseRequested && !close) {
@@ -162,7 +159,6 @@ object Mind extends App {
     // Delete the vertex VBO
     GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0)
     GL15.glDeleteBuffers(vboId)
-    GL15.glDeleteBuffers(vbocId)
 
     // Delete the index VBO
     GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0)
@@ -194,126 +190,6 @@ object Mind extends App {
     Display.destroy()
   }
 
-  def initFullscreenQuad() = {
-
-    val a = 1f
-    val vertices = Array[Float](
-      // Left bottom triangle
-      a, -a, 0f,
-      -a, -a, 0f,
-      -a, a, 0f,
-      a, a, 0f
-    )
-    // Sending data to OpenGL requires the usage of (flipped) byte buffers
-    val verticesBuffer = toBuffer(vertices)
-
-    val indices = Array[Byte](
-      0, 1, 2,
-      2, 3, 0
-    )
-
-    val indicesCount = indices.length
-    val indicesBuffer = toBuffer(indices)
-
-    val uv = Array[Float](
-      1, 0,
-      0, 0,
-      0, 1,
-      1, 1
-    )
-
-    val uvBuffer = BufferUtils.createFloatBuffer(uv.length)
-    uvBuffer.put(uv)
-    uvBuffer.flip()
-
-    val fullscrenVAO = GL30.glGenVertexArrays()
-    GL30.glBindVertexArray(fullscrenVAO)
-
-    // Create a new Vertex Buffer Object in memory and select it (bind)
-    // A VBO is a collection of Vectors which in this case resemble the location of each vertex.
-    val fullscrenVBO = GL15.glGenBuffers()
-    GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, fullscrenVBO)
-    GL15.glBufferData(GL15.GL_ARRAY_BUFFER, verticesBuffer, GL15.GL_STATIC_DRAW)
-    // Put the VBO in the attributes list at index 0
-    GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, 0, 0)
-    checkError("Creating fullscren VBO")
-
-    val fullscreenVBOUV = GL15.glGenBuffers()
-    GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, fullscreenVBOUV)
-    GL15.glBufferData(GL15.GL_ARRAY_BUFFER, uvBuffer, GL15.GL_STATIC_DRAW)
-    GL20.glVertexAttribPointer(1, 2, GL11.GL_FLOAT, false, 0, 0)
-    checkError("Creating fullscreen VBOUV")
-
-    GL20.glEnableVertexAttribArray(0)
-    GL20.glEnableVertexAttribArray(1)
-    checkError("Enabling vertex attribute array for fullscreen quad")
-
-    // Deselect (bind to 0) the VAO
-    GL30.glBindVertexArray(0)
-
-    val fullscrenIndicies = GL15.glGenBuffers()
-    GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, fullscrenIndicies)
-    checkError("Creating indices buffer for fullscreen")
-    GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, indicesBuffer, GL15.GL_STATIC_DRAW)
-    checkError("Uploading indicies for fullscreen")
-    GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0)
-
-    (fullscrenVAO, fullscrenVBO, fullscrenIndicies, fullscreenVBOUV, indicesCount)
-  }
-
-  def makeQuad() {
-
-    // OpenGL expects vertices to be defined counter clockwise by default
-    val vertices = Array[Float](
-      // Left bottom triangle
-      ws + adj, -adj, 0f,
-      -adj, -adj, 0f,
-      -adj, hs + adj, 0f,
-      ws + adj, hs + adj, 0f
-    )
-    // Sending data to OpenGL requires the usage of (flipped) byte buffers
-    val verticesBuffer = toBuffer(vertices)
-    vertexCount = 4
-
-    val indices = Array[Byte](
-      0, 1, 2,
-      2, 3, 0
-    )
-
-    indicesCount = indices.length
-    val indicesBuffer = toBuffer(indices)
-
-    val uvBuffer = sprites16x16.getBuffer()
-
-    // Create a new Vertex Array Object in memory and select it (bind)
-    // A VAO can have up to 16 attributes (VBO's) assigned to it by default
-    vaoId = GL30.glGenVertexArrays()
-    GL30.glBindVertexArray(vaoId)
-
-    // Create a new Vertex Buffer Object in memory and select it (bind)
-    // A VBO is a collection of Vectors which in this case resemble the location of each vertex.
-    vboId = GL15.glGenBuffers()
-    GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboId)
-    GL15.glBufferData(GL15.GL_ARRAY_BUFFER, verticesBuffer, GL15.GL_STATIC_DRAW)
-    // Put the VBO in the attributes list at index 0
-    GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, 0, 0)
-
-    vbouvId = GL15.glGenBuffers()
-    GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbouvId)
-    GL15.glBufferData(GL15.GL_ARRAY_BUFFER, uvBuffer, GL15.GL_STATIC_DRAW)
-    GL20.glVertexAttribPointer(1, 2, GL11.GL_FLOAT, false, 0, 0)
-
-    GL20.glEnableVertexAttribArray(0)
-    GL20.glEnableVertexAttribArray(1)
-
-    // Deselect (bind to 0) the VAO
-    GL30.glBindVertexArray(0)
-
-    vboiId = GL15.glGenBuffers()
-    GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vboiId)
-    GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, indicesBuffer, GL15.GL_STATIC_DRAW)
-    GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0)
-  }
 
   def getLights() = {
     val mx = Mouse.getX
@@ -427,30 +303,6 @@ object Mind extends App {
     GL30.glBindVertexArray(0)
 
     ARBShaderObjects.glUseProgramObjectARB(0)
-  }
-
-  def checkError(msg: String) {
-    val e = glGetError()
-    if (e == GL_INVALID_ENUM) {
-      println(msg + " :" + " invalid enum")
-      close = true
-    }
-    if (e == GL_INVALID_VALUE) {
-      println(msg + " :" + " invalid value")
-      close = true
-    }
-    if (e == GL_INVALID_OPERATION) {
-      println(msg + " :" + " invalid operation")
-      close = true
-    }
-    if (e == GL_INVALID_FRAMEBUFFER_OPERATION) {
-      println(msg + " :" + " invalid framebuffer not done")
-      close = true
-    }
-    if (e == GL_OUT_OF_MEMORY) {
-      println(msg + " :" + " Out of memory!")
-      close = true
-    }
   }
 
   def initDisplay() {

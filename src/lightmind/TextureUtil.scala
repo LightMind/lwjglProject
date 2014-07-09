@@ -19,7 +19,6 @@ import org.lwjgl.opengl.GL30._
 import org.lwjgl.opengl.GL31._
 import org.lwjgl.opengl.GL32._
 import org.lwjgl.opengl.GL33._
-import Mind.checkError
 
 /**
  * Created by Lukas on 02-07-14.
@@ -84,7 +83,7 @@ object TextureUtil {
       GL_RGBA, GL_UNSIGNED_BYTE, none)
     glBindTexture(GL_TEXTURE_2D, 0)
 
-    Mind.checkError("Generate Texture")
+    checkError("Generate Texture")
     val texture = new Texture(texId)
     texture
   }
