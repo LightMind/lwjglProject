@@ -218,7 +218,7 @@ object Mind extends App {
     GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     checkError("clearing color buffer")
 
-    ARBShaderObjects.glUseProgramObjectARB(programGBuffer.program)
+    glUseProgram(programGBuffer.program)
     checkError("Using g buffer program")
 
     val locTime: Int = GL20.glGetUniformLocation(programGBuffer.program, "time")
@@ -278,7 +278,7 @@ object Mind extends App {
     GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0)
     GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0)
 
-    ARBShaderObjects.glUseProgramObjectARB(programOne.program)
+    glUseProgram(programOne.program)
 
     // bind the gbuffer to a texture
     setTextureUniform(programOne.program, "g1", gbuffer1.id, 0)
@@ -297,7 +297,7 @@ object Mind extends App {
 
     GL30.glBindVertexArray(0)
 
-    ARBShaderObjects.glUseProgramObjectARB(0)
+    glUseProgram(0)
   }
 
   def initDisplay() {
@@ -330,25 +330,25 @@ object Mind extends App {
   def compileShaders(vertex: String, fragment: String): ShaderProgram = {
     val none = new ShaderProgram(0, 0, 0)
 
-    val vertShader = ShaderUtil.createShader("shaders/" + vertex, ARBVertexShader.GL_VERTEX_SHADER_ARB)
-    val fragShader = ShaderUtil.createShader("shaders/" + fragment, ARBFragmentShader.GL_FRAGMENT_SHADER_ARB)
+    val vertShader = ShaderUtil.createShader("shaders/" + vertex, GL_VERTEX_SHADER)
+    val fragShader = ShaderUtil.createShader("shaders/" + fragment, GL_FRAGMENT_SHADER)
 
-    val program = ARBShaderObjects.glCreateProgramObjectARB
+    val program = glCreateProgram()
 
     if (program == 0) return none
 
-    ARBShaderObjects.glAttachObjectARB(program, vertShader)
-    ARBShaderObjects.glAttachObjectARB(program, fragShader)
-    ARBShaderObjects.glLinkProgramARB(program)
+    glAttachShader(program, vertShader)
+    glAttachShader(program, fragShader)
+    glLinkProgram(program)
 
-    if (ARBShaderObjects.glGetObjectParameteriARB(program, ARBShaderObjects.GL_OBJECT_LINK_STATUS_ARB) == GL11.GL_FALSE) {
-      System.err.println(ShaderUtil.getLogInfo(program))
+    if (glGetProgrami(program, GL_LINK_STATUS) == GL11.GL_FALSE) {
+      System.err.println(ShaderUtil.getProgramLogInfo(program))
       return none
     }
-    ARBShaderObjects.glValidateProgramARB(program)
+    glValidateProgram(program)
 
-    if (ARBShaderObjects.glGetObjectParameteriARB(program, ARBShaderObjects.GL_OBJECT_VALIDATE_STATUS_ARB) == GL11.GL_FALSE) {
-      System.err.println(ShaderUtil.getLogInfo(program))
+    if (glGetProgrami(program, GL_VALIDATE_STATUS) == GL11.GL_FALSE) {
+      System.err.println(ShaderUtil.getProgramLogInfo(program))
       return none
     }
     val vertexShader = vertShader

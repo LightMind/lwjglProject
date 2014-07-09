@@ -2,7 +2,18 @@ package lightmind
 
 import java.io.{BufferedReader, FileInputStream, InputStreamReader}
 
-import org.lwjgl.opengl.{ARBShaderObjects, GL11}
+import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11._
+import org.lwjgl.opengl.GL12._
+import org.lwjgl.opengl.GL13._
+import org.lwjgl.opengl.GL14._
+import org.lwjgl.opengl.GL15._
+import org.lwjgl.opengl.GL20._
+import org.lwjgl.opengl.GL21._
+import org.lwjgl.opengl.GL30._
+import org.lwjgl.opengl.GL31._
+import org.lwjgl.opengl.GL32._
+import org.lwjgl.opengl.GL33._
 
 /**
  * Created by Lukas on 02-07-14.
@@ -11,16 +22,18 @@ object ShaderUtil {
   def createShader(filename: String, shaderType: Int): Int = {
     var shader: Int = 0
     try {
-      shader = ARBShaderObjects.glCreateShaderObjectARB(shaderType)
+
+      shader = glCreateShader(shaderType)
       if (shader == 0) return 0
-      ARBShaderObjects.glShaderSourceARB(shader, readFileAsString(filename))
-      ARBShaderObjects.glCompileShaderARB(shader)
-      if (ARBShaderObjects.glGetObjectParameteriARB(shader, ARBShaderObjects.GL_OBJECT_COMPILE_STATUS_ARB) == GL11.GL_FALSE) throw new RuntimeException("Error creating shader: " + getLogInfo(shader))
+      glShaderSource(shader, readFileAsString(filename))
+      glCompileShader(shader)
+
+      if (glGetShaderi(shader, GL_COMPILE_STATUS) == GL11.GL_FALSE) throw new RuntimeException("Error creating shader: " + getShaderLogInfo(shader))
       return shader
     }
     catch {
       case exc: Exception => {
-        ARBShaderObjects.glDeleteObjectARB(shader)
+        glDeleteShader(shader)
         throw exc
       }
     }
@@ -79,8 +92,12 @@ object ShaderUtil {
     return source.toString
   }
 
-  def getLogInfo(obj: Int): String = {
-    return ARBShaderObjects.glGetInfoLogARB(obj, ARBShaderObjects.glGetObjectParameteriARB(obj, ARBShaderObjects.GL_OBJECT_INFO_LOG_LENGTH_ARB))
+  def getShaderLogInfo(obj: Int): String = {
+    return glGetShaderInfoLog(obj, GL_INFO_LOG_LENGTH)
+  }
+
+  def getProgramLogInfo(obj: Int): String = {
+    return glGetProgramInfoLog(obj, GL_INFO_LOG_LENGTH)
   }
 
 }
