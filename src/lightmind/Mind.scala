@@ -2,6 +2,7 @@ package lightmind
 
 import java.nio.{ByteBuffer, ByteOrder}
 
+import lightmind._
 import lightmind.opengl._
 import lightmind.terrain.TileManager
 import org.lwjgl.BufferUtils
@@ -12,6 +13,7 @@ import org.lwjgl.util.glu.GLU
 import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.GL12._
 import org.lwjgl.opengl.GL13._
+import org.lwjgl.opengl.GL14._
 import org.lwjgl.opengl.GL15._
 import org.lwjgl.opengl.GL20._
 import org.lwjgl.opengl.GL21._
@@ -45,6 +47,7 @@ object Mind extends App {
 
   val sprites16x16 = new SpriteMap(16, 16)
 
+  val circleVAO = GeometryUtil.initCircleQuad(16)
   val fullscreenVAO = GeometryUtil.initFullscreenQuad()
   val quadVAO = GeometryUtil.makeQuad(ws, hs, adj, sprites16x16)
 
@@ -56,7 +59,12 @@ object Mind extends App {
   val gbuffer2 = TextureUtil.generateTexture(w, h, 0)
   val gbuffer3 = TextureUtil.generateTexture(w, h, 0)
   checkError("Gbuffers done?")
-  val fbo: Int = initFramebuffer(Array(gbuffer1, gbuffer2, gbuffer3))
+  val gbufferFBO: Int = initFramebuffer(Array(gbuffer1, gbuffer2, gbuffer3))
+
+  val lightAccumulation = TextureUtil.generateTexture(w, h, 0)
+  val lightAccumulationFBO = initFramebuffer(Array(lightAccumulation))
+
+  val programTwo = ShaderUtil.compileShaders("screen2.vert", "screen2.frag")
   val programOne = ShaderUtil.compileShaders("screen1.vert", "screen1.frag")
   val programGBuffer = ShaderUtil.compileShaders("gpass.vert", "gpass.frag")
 
@@ -109,7 +117,7 @@ object Mind extends App {
 
     checkError("InitFBO should be done")
 
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo)
+    glBindFramebuffer(GL_FRAMEBUFFER, gbufferFBO)
     val e = glCheckFramebufferStatus(GL_FRAMEBUFFER)
     if (e != GL_FRAMEBUFFER_COMPLETE)
       println("There is a problem with the FBO")
@@ -227,7 +235,7 @@ object Mind extends App {
     GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, quadVAO.indices)
     checkError("Binding indicis for quads")
 
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo)
+    glBindFramebuffer(GL_FRAMEBUFFER, gbufferFBO)
     checkError("Binding framebuffer")
 
     val indi = Array[Int](GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2)
@@ -252,24 +260,43 @@ object Mind extends App {
 
     checkError("Drawing tiles")
 
-    GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0)
-    GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0)
-
+    // using g buffers for light accumulation
+    GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, lightAccumulationFBO)
     glUseProgram(programOne.program)
+
+    glEnable(GL_BLEND)
+    glBlendFunc(GL_ONE, GL_ONE)
+
+    val indi2 = Array[Int](GL_COLOR_ATTACHMENT0)
+    val indibuffer2 = toBuffer(indi2)
+    glDrawBuffers(indibuffer2)
 
     // bind the gbuffer to a texture
     setTextureUniform(programOne.program, "g1", gbuffer1.id, 0)
     setTextureUniform(programOne.program, "g2", gbuffer2.id, 2)
     setTextureUniform(programOne.program, "g3", gbuffer3.id, 4)
 
-    GL30.glBindVertexArray(fullscreenVAO.id)
-    checkError("Binding fullscreen VAO")
-    GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, fullscreenVAO.indices)
-    checkError("Bind indices for fullscreen vbo")
-    GL11.glDrawElements(GL11.GL_TRIANGLES, fullscreenVAO.indicesCount, GL11.GL_UNSIGNED_BYTE, 0)
+    // bind circle vao,render lights.
+    GL30.glBindVertexArray(circleVAO.id)
+    checkError("Binding circle VAO")
+    GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, circleVAO.indices)
+    checkError("Bind indices for circle vbo")
+    GL11.glDrawElements(GL11.GL_TRIANGLE_FAN, circleVAO.indicesCount, GL_UNSIGNED_BYTE, 0)
     checkError("Done drawing fullscreen quad")
 
-    GL30.glBindVertexArray(0)
+    // Show light accumulation in fullscreen
+    glDisable(GL_BLEND)
+    glBindFramebuffer(GL_FRAMEBUFFER, 0)
+    glUseProgram(programTwo.program)
+
+    setTextureUniform(programTwo.program, "g1", lightAccumulation.id, 0)
+
+    GL30.glBindVertexArray(fullscreenVAO.id)
+    checkError("Binding circle VAO")
+    GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, fullscreenVAO.indices)
+    checkError("Bind indices for circle vbo")
+    GL11.glDrawElements(GL11.GL_TRIANGLES, fullscreenVAO.indicesCount, GL11.GL_UNSIGNED_BYTE, 0)
+    checkError("Done drawing fullscreen quad")
 
     glUseProgram(0)
   }

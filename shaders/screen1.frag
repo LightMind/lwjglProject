@@ -1,5 +1,5 @@
 #version 330
-
+// this shader if for light accumulation
 uniform sampler2D g1;
 uniform sampler2D g2;
 uniform sampler2D g3;
