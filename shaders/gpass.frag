@@ -17,7 +17,6 @@ layout(location = 2) out vec4 g3;
 
 in Data {
     vec2 screenPosition;
-    vec4 color;
     vec2 uv;
 } In;
 

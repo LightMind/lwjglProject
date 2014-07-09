@@ -8,7 +8,6 @@ uniform vec2 uvPosition;
 uniform vec2 uvScalars;
 
 in vec4 in_Position;
-in vec4 in_Color;
 in vec2 in_uv;
 
 out Data {

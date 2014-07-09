@@ -236,14 +236,12 @@ object Mind extends App {
     GL15.glBufferData(GL15.GL_ARRAY_BUFFER, verticesBuffer, GL15.GL_STATIC_DRAW)
     // Put the VBO in the attributes list at index 0
     GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, 0, 0)
-    GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0)
     checkError("Creating fullscren VBO")
 
     val fullscreenVBOUV = GL15.glGenBuffers()
     GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, fullscreenVBOUV)
     GL15.glBufferData(GL15.GL_ARRAY_BUFFER, uvBuffer, GL15.GL_STATIC_DRAW)
     GL20.glVertexAttribPointer(1, 2, GL11.GL_FLOAT, false, 0, 0)
-    GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0)
     checkError("Creating fullscreen VBOUV")
 
     GL20.glEnableVertexAttribArray(0)
@@ -285,15 +283,6 @@ object Mind extends App {
     indicesCount = indices.length
     val indicesBuffer = toBuffer(indices)
 
-    val colors = Array[Float](
-      1f, 0f, 0f, 1f,
-      0f, 1f, 0f, 1f,
-      0f, 0f, 1f, 1f,
-      1f, 1f, 1f, 1f
-    )
-
-    val colorsBuffer = toBuffer(colors)
-
     val uvBuffer = sprites16x16.getBuffer()
 
     // Create a new Vertex Array Object in memory and select it (bind)
@@ -308,24 +297,14 @@ object Mind extends App {
     GL15.glBufferData(GL15.GL_ARRAY_BUFFER, verticesBuffer, GL15.GL_STATIC_DRAW)
     // Put the VBO in the attributes list at index 0
     GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, 0, 0)
-    // Deselect (bind to 0) the VBO
-    GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0)
-
-    vbocId = GL15.glGenBuffers()
-    GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbocId)
-    GL15.glBufferData(GL15.GL_ARRAY_BUFFER, colorsBuffer, GL15.GL_STATIC_DRAW)
-    GL20.glVertexAttribPointer(1, 4, GL11.GL_FLOAT, false, 0, 0)
-    GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0)
 
     vbouvId = GL15.glGenBuffers()
     GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbouvId)
     GL15.glBufferData(GL15.GL_ARRAY_BUFFER, uvBuffer, GL15.GL_STATIC_DRAW)
-    GL20.glVertexAttribPointer(2, 2, GL11.GL_FLOAT, false, 0, 0)
-    GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0)
+    GL20.glVertexAttribPointer(1, 2, GL11.GL_FLOAT, false, 0, 0)
 
     GL20.glEnableVertexAttribArray(0)
     GL20.glEnableVertexAttribArray(1)
-    GL20.glEnableVertexAttribArray(2)
 
     // Deselect (bind to 0) the VAO
     GL30.glBindVertexArray(0)
@@ -444,7 +423,7 @@ object Mind extends App {
     // Put everything back to default (deselect)
     //  GL20.glDisableVertexAttribArray(0)
     //  GL20.glDisableVertexAttribArray(1)
-    //  GL20.glDisableVertexAttribArray(2)
+
     GL30.glBindVertexArray(0)
 
     ARBShaderObjects.glUseProgramObjectARB(0)
