@@ -2,6 +2,7 @@ package lightmind
 
 import java.io.{BufferedReader, FileInputStream, InputStreamReader}
 
+import lightmind.opengl.ShaderProgram
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.GL12._
@@ -19,6 +20,35 @@ import org.lwjgl.opengl.GL33._
  * Created by Lukas on 02-07-14.
  */
 object ShaderUtil {
+  def compileShaders(vertex: String, fragment: String): ShaderProgram = {
+    val none = new ShaderProgram(0, 0, 0)
+
+    val vertShader = ShaderUtil.createShader("shaders/" + vertex, GL_VERTEX_SHADER)
+    val fragShader = ShaderUtil.createShader("shaders/" + fragment, GL_FRAGMENT_SHADER)
+
+    val program = glCreateProgram()
+
+    if (program == 0) return none
+
+    glAttachShader(program, vertShader)
+    glAttachShader(program, fragShader)
+    glLinkProgram(program)
+
+    if (glGetProgrami(program, GL_LINK_STATUS) == GL11.GL_FALSE) {
+      System.err.println(ShaderUtil.getProgramLogInfo(program))
+      return none
+    }
+    glValidateProgram(program)
+
+    if (glGetProgrami(program, GL_VALIDATE_STATUS) == GL11.GL_FALSE) {
+      System.err.println(ShaderUtil.getProgramLogInfo(program))
+      return none
+    }
+    val vertexShader = vertShader
+    val fragmentShader = fragShader
+    new ShaderProgram(program, vertexShader, fragmentShader)
+  }
+
   def createShader(filename: String, shaderType: Int): Int = {
     var shader: Int = 0
     try {

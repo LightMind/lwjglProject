@@ -70,9 +70,8 @@ object Mind extends App {
   val gbuffer3 = TextureUtil.generateTexture(w, h, 0)
   checkError("Gbuffers done?")
   val fbo: Int = initFramebuffer(Array(gbuffer1, gbuffer2, gbuffer3))
-
-  val programOne = compileShaders("screen1.vert", "screen1.frag")
-  val programGBuffer = compileShaders("gpass.vert", "gpass.frag")
+  val programOne = ShaderUtil.compileShaders("screen1.vert", "screen1.frag")
+  val programGBuffer = ShaderUtil.compileShaders("gpass.vert", "gpass.frag")
 
   initTiles()
 
@@ -327,32 +326,4 @@ object Mind extends App {
     GL11.glHint(GL11.GL_PERSPECTIVE_CORRECTION_HINT, GL11.GL_NICEST)
   }
 
-  def compileShaders(vertex: String, fragment: String): ShaderProgram = {
-    val none = new ShaderProgram(0, 0, 0)
-
-    val vertShader = ShaderUtil.createShader("shaders/" + vertex, GL_VERTEX_SHADER)
-    val fragShader = ShaderUtil.createShader("shaders/" + fragment, GL_FRAGMENT_SHADER)
-
-    val program = glCreateProgram()
-
-    if (program == 0) return none
-
-    glAttachShader(program, vertShader)
-    glAttachShader(program, fragShader)
-    glLinkProgram(program)
-
-    if (glGetProgrami(program, GL_LINK_STATUS) == GL11.GL_FALSE) {
-      System.err.println(ShaderUtil.getProgramLogInfo(program))
-      return none
-    }
-    glValidateProgram(program)
-
-    if (glGetProgrami(program, GL_VALIDATE_STATUS) == GL11.GL_FALSE) {
-      System.err.println(ShaderUtil.getProgramLogInfo(program))
-      return none
-    }
-    val vertexShader = vertShader
-    val fragmentShader = fragShader
-    new ShaderProgram(program, vertexShader, fragmentShader)
-  }
 }
