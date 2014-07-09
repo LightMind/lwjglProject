@@ -405,7 +405,6 @@ object Mind extends App {
     }
     checkError("setting texture uniforms")
 
-
     // Bind to the VAO that has all the information about the quad vertices
     GL30.glBindVertexArray(vaoId)
     checkError("Binding vertex array vaoID")
@@ -545,6 +544,13 @@ object Mind extends App {
 
   def bufferUtil(values: Array[Int]) = {
     val b = BufferUtils.createIntBuffer(values.length)
+    b.put(values)
+    b.flip()
+    b
+  }
+
+  def bufferUtil(values: Array[Byte]) = {
+    val b = BufferUtils.createByteBuffer(values.length)
     b.put(values)
     b.flip()
     b
