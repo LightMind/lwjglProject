@@ -205,9 +205,7 @@ object Mind extends App {
       a, a, 0f
     )
     // Sending data to OpenGL requires the usage of (flipped) byte buffers
-    val verticesBuffer = BufferUtils.createFloatBuffer(vertices.length)
-    verticesBuffer.put(vertices)
-    verticesBuffer.flip()
+    val verticesBuffer = bufferUtil(vertices)
 
     val indices = Array[Byte](
       0, 1, 2,
@@ -215,9 +213,7 @@ object Mind extends App {
     )
 
     val indicesCount = indices.length
-    val indicesBuffer = BufferUtils.createByteBuffer(indicesCount)
-    indicesBuffer.put(indices)
-    indicesBuffer.flip()
+    val indicesBuffer = bufferUtil(indices)
 
     val uv = Array[Float](
       1, 0,
@@ -278,9 +274,7 @@ object Mind extends App {
       ws + adj, hs + adj, 0f
     )
     // Sending data to OpenGL requires the usage of (flipped) byte buffers
-    val verticesBuffer = BufferUtils.createFloatBuffer(vertices.length)
-    verticesBuffer.put(vertices)
-    verticesBuffer.flip()
+    val verticesBuffer = bufferUtil(vertices)
     vertexCount = 4
 
     val indices = Array[Byte](
@@ -289,9 +283,7 @@ object Mind extends App {
     )
 
     indicesCount = indices.length
-    val indicesBuffer = BufferUtils.createByteBuffer(indicesCount)
-    indicesBuffer.put(indices)
-    indicesBuffer.flip()
+    val indicesBuffer = bufferUtil(indices)
 
     val colors = Array[Float](
       1f, 0f, 0f, 1f,
@@ -300,9 +292,7 @@ object Mind extends App {
       1f, 1f, 1f, 1f
     )
 
-    val colorsBuffer = BufferUtils.createFloatBuffer(colors.length)
-    colorsBuffer.put(colors)
-    colorsBuffer.flip()
+    val colorsBuffer = bufferUtil(colors)
 
     val uvBuffer = sprites16x16.getBuffer()
 
@@ -357,9 +347,7 @@ object Mind extends App {
       100f, 100f
     )
     // Sending data to OpenGL requires the usage of (flipped) byte buffers
-    val lightBuffer = BufferUtils.createFloatBuffer(lights.length)
-    lightBuffer.put(lights)
-    lightBuffer.flip()
+    val lightBuffer = bufferUtil(lights)
 
     val lightsCount = 4
     (lightBuffer, lightsCount)
