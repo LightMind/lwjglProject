@@ -8,6 +8,17 @@ import de.matthiasmann.twl.utils.PNGDecoder.Format
 import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.GL12._
 import org.lwjgl.opengl.{GL11, GL13}
+import org.lwjgl.opengl.GL11._
+import org.lwjgl.opengl.GL12._
+import org.lwjgl.opengl.GL13._
+import org.lwjgl.opengl.GL15._
+import org.lwjgl.opengl.GL20._
+import org.lwjgl.opengl.GL21._
+import org.lwjgl.opengl.GL30._
+import org.lwjgl.opengl.GL31._
+import org.lwjgl.opengl.GL32._
+import org.lwjgl.opengl.GL33._
+import Mind.checkError
 
 /**
  * Created by Lukas on 02-07-14.
@@ -16,17 +27,22 @@ object TextureUtil {
   def loadPNGTexture(filename: String, textureUnit: Int): Int = {
     val (buf, width, height) = loadTexture(filename)
     val texID = GL11.glGenTextures()
-    GL13.glActiveTexture(texID)
+    checkError("LoadPNG: creating texture")
+    GL13.glActiveTexture(GL_TEXTURE0)
+    checkError("LoadPNG: set active texture")
     GL11.glBindTexture(GL11.GL_TEXTURE_2D, texID)
+    checkError("LoadPNG: Bind Texture")
     GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 1)
+    checkError("LoadPNG: unpack alignment")
     GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buf)
-
+    checkError("LoadPNG: setting texture")
     GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_REPEAT)
     GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_REPEAT)
-
+    checkError("LoadPNG: setting texture filters")
     GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST)
+    checkError("LoadPNG: using nearest as min filter")
     GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST)
-
+    checkError("LoadPNG: using nearest as mag filter")
     texID
   }
 
@@ -56,9 +72,9 @@ object TextureUtil {
     (buf, tWidth, tHeight)
   }
 
-  def generateTexture(width: Int, height: Int) = {
+  def generateTexture(width: Int, height: Int, textureUnit:Int) = {
     val texId = glGenTextures()
-    GL13.glActiveTexture(texId)
+    GL13.glActiveTexture(GL_TEXTURE0 + textureUnit)
     glBindTexture(GL_TEXTURE_2D, texId)
     glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 1)
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
@@ -66,11 +82,12 @@ object TextureUtil {
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
 
-    var none: ByteBuffer = null
+    val none: ByteBuffer = null
     GL11.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0,
       GL_RGBA, GL_UNSIGNED_BYTE, none)
     glBindTexture(GL_TEXTURE_2D, 0)
 
+    Mind.checkError("Generate Texture")
     texId
   }
 }

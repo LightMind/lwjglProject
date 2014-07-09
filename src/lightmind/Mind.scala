@@ -39,6 +39,7 @@ object Mind extends App {
   var heightmapTexId = 0
   var texId = 0
   var specularTexId = 0
+  var close = false
 
   val scalarw = w / 64
   val scalarh = h / 64
@@ -51,29 +52,38 @@ object Mind extends App {
   val tileManager = new TileManager()
   val r = new Random()
 
+  println("Init Display")
   initDisplay()
 
+  val sampler = initSampler()
+
+  println("Creating full screen quad.")
   val (fullscrenVAO, fullscrenVBO, fullscrenIndicies, fullscreenVBOUV, fullscrenIndicesCount) = initFullscreenQuad()
 
+  println("Loading textures")
   normalTexId = TextureUtil.loadPNGTexture("res/sprite1-normal.png", 0)
   texId = TextureUtil.loadPNGTexture("res/sprite1-color.png", 0)
   specularTexId = TextureUtil.loadPNGTexture("res/sprite1-specular.png", 0)
   heightmapTexId = TextureUtil.loadPNGTexture("res/sprite1-height.png", 0)
 
+  println("Sprite Map")
   val sprites16x16 = new SpriteMap(16, 16)
 
+  println("generating gbuffer textures")
   val fboEnabled = GLContext.getCapabilities().GL_EXT_framebuffer_object
-  val gbuffer1 = TextureUtil.generateTexture(w, h)
-  val gbuffer2 = TextureUtil.generateTexture(w, h)
-  val gbuffer3 = TextureUtil.generateTexture(w, h)
-  val fbo = initFramebuffer(Array(gbuffer1, gbuffer2, gbuffer3))
+  checkError("getting capabilities")
+  val gbuffer1 = TextureUtil.generateTexture(w, h, 0)
+  val gbuffer2 = TextureUtil.generateTexture(w, h, 0)
+  val gbuffer3 = TextureUtil.generateTexture(w, h, 0)
+  checkError("Gbuffers done?")
+  val fbo: Int = initFramebuffer(Array(gbuffer1, gbuffer2, gbuffer3))
 
   val (vertexOne, fragmentOne, programOne) = compileShaders("screen1.vert", "screen1.frag")
   val (vertexGBuffer, fragmentGBuffer, programGBuffer) = compileShaders("gpass.vert", "gpass.frag")
   makeQuad()
   initTiles()
 
-  while (!Display.isCloseRequested) {
+  while (!Display.isCloseRequested && !close) {
     x = x + 1
     t += 0.002f
     drawWithShader()
@@ -82,28 +92,52 @@ object Mind extends App {
 
   clean()
 
-  def initFramebuffer(textureIDs: Array[Int]) = {
+  def initFramebuffer(textureIDs: Array[Int]): Int = {
     val attachments = Array[Int](GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4, GL_COLOR_ATTACHMENT5, GL_COLOR_ATTACHMENT6, GL_COLOR_ATTACHMENT7)
     val buffer =
       if (fboEnabled) {
         val buffer = ByteBuffer.allocateDirect(1 * 4).order(ByteOrder.nativeOrder()).asIntBuffer()
         GL30.glGenFramebuffers(buffer)
+        checkError("InitFBO generate framebuffer")
         buffer.get()
       } else {
+        println("framebuffers not supported")
+        close = true
         -1
       }
-
+    println("buffer: " + buffer)
 
     for (i <- 0 until textureIDs.length.min(8)) {
-      GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, buffer)
-      GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureIDs(1))
-      GL30.glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0,
-        GL11.GL_TEXTURE_2D, attachments(1), 0)
+      GL30.glBindFramebuffer(GL_FRAMEBUFFER, buffer)
+      checkError("InitFBO binding framebuffer")
+      GL11.glBindTexture(GL_TEXTURE_2D, textureIDs(i))
+      checkError("InitFBO binding texture")
+      GL30.glFramebufferTexture2D(GL_FRAMEBUFFER, attachments(i),
+        GL11.GL_TEXTURE_2D, textureIDs(i), 0)
+      checkError("InitFBO using texture2D")
     }
 
-    GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0)
+
+    checkError("InitFBO should be done")
+
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo)
+    val e = glCheckFramebufferStatus(GL_FRAMEBUFFER)
+    if (e != GL_FRAMEBUFFER_COMPLETE)
+      println("There is a problem with the FBO")
+
+    GL30.glBindFramebuffer(GL_FRAMEBUFFER, 0)
 
     buffer
+  }
+
+  def initSampler() = {
+    val sampler = glGenSamplers()
+    glSamplerParameteri(sampler, GL_TEXTURE_WRAP_S, GL_REPEAT)
+    glSamplerParameteri(sampler, GL_TEXTURE_WRAP_T, GL_REPEAT)
+    glSamplerParameteri(sampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+    glSamplerParameteri(sampler, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+    checkError("Creating sampler.")
+    sampler
   }
 
   def initTiles() = {
@@ -169,6 +203,8 @@ object Mind extends App {
     glDeleteTextures(gbuffer2)
     glDeleteTextures(gbuffer3)
 
+    glDeleteSamplers(sampler)
+
     Display.destroy()
   }
 
@@ -219,22 +255,27 @@ object Mind extends App {
     // Put the VBO in the attributes list at index 0
     GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, 0, 0)
     GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0)
+    checkError("Creating fullscren VBO")
 
     val fullscreenVBOUV = GL15.glGenBuffers()
     GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, fullscreenVBOUV)
     GL15.glBufferData(GL15.GL_ARRAY_BUFFER, uvBuffer, GL15.GL_STATIC_DRAW)
     GL20.glVertexAttribPointer(1, 2, GL11.GL_FLOAT, false, 0, 0)
     GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0)
+    checkError("Creating fullscreen VBOUV")
 
     GL20.glEnableVertexAttribArray(0)
     GL20.glEnableVertexAttribArray(1)
+    checkError("Enabling vertex attribute array for fullscreen quad")
 
     // Deselect (bind to 0) the VAO
     GL30.glBindVertexArray(0)
 
     val fullscrenIndicies = GL15.glGenBuffers()
     GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, fullscrenIndicies)
+    checkError("Creating indices buffer for fullscreen")
     GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, indicesBuffer, GL15.GL_STATIC_DRAW)
+    checkError("Uploading indicies for fullscreen")
     GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0)
 
     (fullscrenVAO, fullscrenVBO, fullscrenIndicies, fullscreenVBOUV, indicesCount)
@@ -342,37 +383,53 @@ object Mind extends App {
     val location = glGetUniformLocation(program, name)
     glUniform1i(location, index)
     glActiveTexture(GL_TEXTURE0 + index)
-    GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID)
-    GL33.glBindSampler(0, GL11.GL_NEAREST)
+    checkError("Active texture " + index)
+    GL11.glBindTexture(GL_TEXTURE_2D, textureID)
+    checkError("Binding texture " + textureID)
+    GL33.glBindSampler(index, sampler)
+    checkError("Binding sampler")
   }
 
   def drawWithShader() {
-    GL11.glClear(GL11.GL_COLOR_BUFFER_BIT)
+    GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+    checkError("clearing color buffer")
     if (useShader) {
       ARBShaderObjects.glUseProgramObjectARB(programGBuffer)
+      checkError("Using g buffer program")
 
       val locTime: Int = GL20.glGetUniformLocation(programGBuffer, "time")
       GL20.glUniform1f(locTime, t)
 
+      checkError("Setting time uniform")
+
       val screenInfo = GL20.glGetUniformLocation(programGBuffer, "screen")
       GL20.glUniform4f(screenInfo, w, h, 0f, 0f)
 
+      checkError("Setting screen uniform")
+
       val uvScalars = GL20.glGetUniformLocation(programGBuffer, "uvScalars")
       GL20.glUniform2f(uvScalars, sprites16x16.sizeWidth, sprites16x16.sizeHeight)
+
+      checkError("Setting uvScalars uniform")
 
       setTextureUniform(programGBuffer, "norm", normalTexId, 0)
       setTextureUniform(programGBuffer, "tex", texId, 2)
       setTextureUniform(programGBuffer, "specular", specularTexId, 4)
       setTextureUniform(programGBuffer, "heightMap", heightmapTexId, 6)
+      checkError("setting texture uniforms")
 
     }
 
     // Bind to the VAO that has all the information about the quad vertices
     GL30.glBindVertexArray(vaoId)
+    checkError("Binding vertex array vaoID")
 
     GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vboiId)
+    checkError("Binding indicis for quads")
 
-    GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, fbo)
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo)
+    checkError("Binding framebuffer")
+
     val indi = Array[Int](GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2)
     val indibuffer = BufferUtils.createIntBuffer(indi.length)
     indibuffer.put(indi)
@@ -380,7 +437,9 @@ object Mind extends App {
     glDrawBuffers(indibuffer)
 
     GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT)
+    checkError("Clearing framebuffer")
     GL11.glDisable(GL11.GL_DEPTH_TEST)
+    checkError("Disable depth test (again)")
 
     val posLocation = GL20.glGetUniformLocation(programGBuffer, "position")
     val uvPosition = GL20.glGetUniformLocation(programGBuffer, "uvPosition")
@@ -393,35 +452,24 @@ object Mind extends App {
       GL11.glDrawElements(GL11.GL_TRIANGLES, indicesCount, GL11.GL_UNSIGNED_BYTE, 0)
     }
 
-    GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, 0)
+    checkError("Drawing tiles")
+
+    GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0)
+    GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0)
 
     ARBShaderObjects.glUseProgramObjectARB(programOne)
 
     // bind the gbuffer to a texture
-    val gbuffer1Location = GL20.glGetUniformLocation(programOne, "g1")
-    GL20.glUniform1i(gbuffer1Location, 0)
-    GL13.glActiveTexture(GL13.GL_TEXTURE0 + 0)
-    GL11.glBindTexture(GL11.GL_TEXTURE_2D, gbuffer1)
-    GL33.glBindSampler(0, GL11.GL_NEAREST)
-
-    val gbuffer2Location = GL20.glGetUniformLocation(programOne, "g2")
-    GL20.glUniform1i(gbuffer2Location, 2)
-    GL13.glActiveTexture(GL13.GL_TEXTURE0 + 2)
-    GL11.glBindTexture(GL11.GL_TEXTURE_2D, gbuffer2)
-    GL33.glBindSampler(2, GL11.GL_NEAREST)
-
-    val gbuffer3Location = GL20.glGetUniformLocation(programOne, "g3")
-    GL20.glUniform1i(gbuffer3Location, 4)
-    GL13.glActiveTexture(GL13.GL_TEXTURE0 + 4)
-    GL11.glBindTexture(GL11.GL_TEXTURE_2D, gbuffer3)
-    GL33.glBindSampler(4, GL11.GL_NEAREST)
-
-    glDrawBuffers(GL_COLOR_ATTACHMENT0)
+    setTextureUniform(programOne, "g1", gbuffer1, 0)
+    setTextureUniform(programOne, "g2", gbuffer2, 2)
+    setTextureUniform(programOne, "g3", gbuffer3, 4)
 
     GL30.glBindVertexArray(fullscrenVAO)
+    checkError("Binding fullscreen VAO")
     GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, fullscrenIndicies)
+    checkError("Bind indices for fullscreen vbo")
     GL11.glDrawElements(GL11.GL_TRIANGLES, indicesCount, GL11.GL_UNSIGNED_BYTE, 0)
-
+    checkError("Done drawing fullscreen quad")
     // Put everything back to default (deselect)
     //  GL20.glDisableVertexAttribArray(0)
     //  GL20.glDisableVertexAttribArray(1)
@@ -429,6 +477,30 @@ object Mind extends App {
     GL30.glBindVertexArray(0)
 
     if (useShader) ARBShaderObjects.glUseProgramObjectARB(0)
+  }
+
+  def checkError(msg: String) {
+    val e = glGetError()
+    if (e == GL_INVALID_ENUM) {
+      println(msg + " :" + " invalid enum")
+      close = true
+    }
+    if (e == GL_INVALID_VALUE) {
+      println(msg + " :" + " invalid value")
+      close = true
+    }
+    if (e == GL_INVALID_OPERATION) {
+      println(msg + " :" + " invalid operation")
+      close = true
+    }
+    if (e == GL_INVALID_FRAMEBUFFER_OPERATION) {
+      println(msg + " :" + " invalid framebuffer not done")
+      close = true
+    }
+    if (e == GL_OUT_OF_MEMORY) {
+      println(msg + " :" + " Out of memory!")
+      close = true
+    }
   }
 
   def initDisplay() {
@@ -440,6 +512,7 @@ object Mind extends App {
     Display.create(pf, ca)
     Display.sync(60)
     GL11.glDisable(GL11.GL_DEPTH_TEST)
+    checkError("Disable depth test")
     System.out.println("OpenGL version: " + GL11.glGetString(GL11.GL_VERSION))
   }
 
@@ -466,7 +539,6 @@ object Mind extends App {
     vertShader = ShaderUtil.createShader("shaders/" + vertex, ARBVertexShader.GL_VERTEX_SHADER_ARB)
     fragShader = ShaderUtil.createShader("shaders/" + fragment, ARBFragmentShader.GL_FRAGMENT_SHADER_ARB)
 
-
     val program = ARBShaderObjects.glCreateProgramObjectARB
 
     if (program == 0) return none
@@ -474,9 +546,6 @@ object Mind extends App {
     ARBShaderObjects.glAttachObjectARB(program, vertShader)
     ARBShaderObjects.glAttachObjectARB(program, fragShader)
     ARBShaderObjects.glLinkProgramARB(program)
-
-    //GL20.glBindAttribLocation(program, 0, "in_Position")
-    // GL20.glBindAttribLocation(program, 1, "in_Color")
 
     if (ARBShaderObjects.glGetObjectParameteriARB(program, ARBShaderObjects.GL_OBJECT_LINK_STATUS_ARB) == GL11.GL_FALSE) {
       System.err.println(ShaderUtil.getLogInfo(program))
