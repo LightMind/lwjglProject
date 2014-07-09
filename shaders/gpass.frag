@@ -54,7 +54,7 @@ void main(){
     bool randomizeNormals = false;
 
     if(randomizeNormals){
-        normal = normalize(normal + vec3(ax,ay,az)*(specVal*specVal)*1.5);
+        normal = normalize(normal + vec3(ax,ay,az)*(specVal*specVal)*0.0);
     }
 
     vec4 color  = texture(tex,uv);
