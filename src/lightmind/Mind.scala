@@ -417,9 +417,7 @@ object Mind extends App {
     checkError("Binding framebuffer")
 
     val indi = Array[Int](GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2)
-    val indibuffer = BufferUtils.createIntBuffer(indi.length)
-    indibuffer.put(indi)
-    indibuffer.flip()
+    val indibuffer = bufferUtil(indi)
     glDrawBuffers(indibuffer)
 
     GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT)
