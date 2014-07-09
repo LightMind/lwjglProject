@@ -262,6 +262,7 @@ object Mind extends App {
 
     // using g buffers for light accumulation
     GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, lightAccumulationFBO)
+    glClear(GL_COLOR_BUFFER_BIT)
     glUseProgram(programOne.program)
 
     glEnable(GL_BLEND)
@@ -276,6 +277,14 @@ object Mind extends App {
     setTextureUniform(programOne.program, "g2", gbuffer2.id, 2)
     setTextureUniform(programOne.program, "g3", gbuffer3.id, 4)
 
+    val positionOne = glGetUniformLocation(programOne.program, "position")
+    val screenOne = glGetUniformLocation(programOne.program, "screen")
+    val radius = glGetUniformLocation(programOne.program, "radius")
+
+    glUniform2f(positionOne, Mouse.getX, h - Mouse.getY)
+    glUniform4f(screenOne, w, h, 0, 0)
+    glUniform1f(radius, 500)
+
     // bind circle vao,render lights.
     GL30.glBindVertexArray(circleVAO.id)
     checkError("Binding circle VAO")
@@ -283,6 +292,11 @@ object Mind extends App {
     checkError("Bind indices for circle vbo")
     GL11.glDrawElements(GL11.GL_TRIANGLE_FAN, circleVAO.indicesCount, GL_UNSIGNED_BYTE, 0)
     checkError("Done drawing fullscreen quad")
+
+    glUniform2f(positionOne, 50, 50)
+    glUniform4f(screenOne, w, h, 0, 0)
+    glUniform1f(radius, 500)
+    GL11.glDrawElements(GL11.GL_TRIANGLE_FAN, circleVAO.indicesCount, GL_UNSIGNED_BYTE, 0)
 
     // Show light accumulation in fullscreen
     glDisable(GL_BLEND)

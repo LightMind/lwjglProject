@@ -49,7 +49,7 @@ void main(){
     float ay = rand0(position*2 + uvTiled)*2.0 - 1.0;
     float az = rand0(position*3 + uvTiled)*2.0 - 1.0;
 
-    vec3 normal = getNormalAt(uv);
+    vec3 normal = texture(norm,uv).rgb;;
 
     bool randomizeNormals = false;
 

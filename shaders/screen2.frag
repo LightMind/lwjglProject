@@ -10,7 +10,7 @@ in Data {
 } In;
 
 void main(){
-    glc = texture(g1,In.screenPosition);
+    glc = texture(g1,In.uv);
 }
 
 

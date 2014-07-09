@@ -1,6 +1,8 @@
 #version 330
-
 in vec4 in_Position;
+in vec2 in_uv;
+
+uniform vec4 screen;
 
 out Data {
     vec2 screenPosition;
@@ -9,6 +11,6 @@ out Data {
 
 void main(){
     gl_Position = in_Position;
-    Out.screenPosition = in_Position.xy;
-    Out.uv = in_Position.xy;
+    Out.screenPosition = gl_Position.xy;
+    Out.uv = in_uv;
 }
