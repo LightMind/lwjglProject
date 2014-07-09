@@ -20,7 +20,6 @@ import org.lwjgl.opengl.GL31._
 import org.lwjgl.opengl.GL32._
 import org.lwjgl.opengl.GL33._
 
-
 import scala.util.Random
 
 object Mind extends App {
@@ -28,7 +27,6 @@ object Mind extends App {
   val w = 1280
   val h = 720
   var t = 1.0f
-  var useShader = false
   var vaoId = 0
   var vboId = 0
   var vbocId = 0
@@ -378,32 +376,31 @@ object Mind extends App {
   def drawWithShader() {
     GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     checkError("clearing color buffer")
-    if (useShader) {
-      ARBShaderObjects.glUseProgramObjectARB(programGBuffer.program)
-      checkError("Using g buffer program")
 
-      val locTime: Int = GL20.glGetUniformLocation(programGBuffer.program, "time")
-      GL20.glUniform1f(locTime, t)
+    ARBShaderObjects.glUseProgramObjectARB(programGBuffer.program)
+    checkError("Using g buffer program")
 
-      checkError("Setting time uniform")
+    val locTime: Int = GL20.glGetUniformLocation(programGBuffer.program, "time")
+    GL20.glUniform1f(locTime, t)
 
-      val screenInfo = GL20.glGetUniformLocation(programGBuffer.program, "screen")
-      GL20.glUniform4f(screenInfo, w, h, 0f, 0f)
+    checkError("Setting time uniform")
 
-      checkError("Setting screen uniform")
+    val screenInfo = GL20.glGetUniformLocation(programGBuffer.program, "screen")
+    GL20.glUniform4f(screenInfo, w, h, 0f, 0f)
 
-      val uvScalars = GL20.glGetUniformLocation(programGBuffer.program, "uvScalars")
-      GL20.glUniform2f(uvScalars, sprites16x16.sizeWidth, sprites16x16.sizeHeight)
+    checkError("Setting screen uniform")
 
-      checkError("Setting uvScalars uniform")
+    val uvScalars = GL20.glGetUniformLocation(programGBuffer.program, "uvScalars")
+    GL20.glUniform2f(uvScalars, sprites16x16.sizeWidth, sprites16x16.sizeHeight)
 
-      setTextureUniform(programGBuffer.program, "norm", normalTexId.id, 0)
-      setTextureUniform(programGBuffer.program, "tex", texId.id, 2)
-      setTextureUniform(programGBuffer.program, "specular", specularTexId.id, 4)
-      setTextureUniform(programGBuffer.program, "heightMap", heightmapTexId.id, 6)
-      checkError("setting texture uniforms")
+    checkError("Setting uvScalars uniform")
 
-    }
+    setTextureUniform(programGBuffer.program, "norm", normalTexId.id, 0)
+    setTextureUniform(programGBuffer.program, "tex", texId.id, 2)
+    setTextureUniform(programGBuffer.program, "specular", specularTexId.id, 4)
+    setTextureUniform(programGBuffer.program, "heightMap", heightmapTexId.id, 6)
+    checkError("setting texture uniforms")
+
 
     // Bind to the VAO that has all the information about the quad vertices
     GL30.glBindVertexArray(vaoId)
@@ -461,7 +458,7 @@ object Mind extends App {
     //  GL20.glDisableVertexAttribArray(2)
     GL30.glBindVertexArray(0)
 
-    if (useShader) ARBShaderObjects.glUseProgramObjectARB(0)
+    ARBShaderObjects.glUseProgramObjectARB(0)
   }
 
   def checkError(msg: String) {
@@ -516,13 +513,10 @@ object Mind extends App {
   }
 
   def compileShaders(vertex: String, fragment: String): ShaderProgram = {
-    var vertShader: Int = 0
-    var fragShader: Int = 0
-
     val none = new ShaderProgram(0, 0, 0)
 
-    vertShader = ShaderUtil.createShader("shaders/" + vertex, ARBVertexShader.GL_VERTEX_SHADER_ARB)
-    fragShader = ShaderUtil.createShader("shaders/" + fragment, ARBFragmentShader.GL_FRAGMENT_SHADER_ARB)
+    val vertShader = ShaderUtil.createShader("shaders/" + vertex, ARBVertexShader.GL_VERTEX_SHADER_ARB)
+    val fragShader = ShaderUtil.createShader("shaders/" + fragment, ARBFragmentShader.GL_FRAGMENT_SHADER_ARB)
 
     val program = ARBShaderObjects.glCreateProgramObjectARB
 
@@ -542,7 +536,6 @@ object Mind extends App {
       System.err.println(ShaderUtil.getLogInfo(program))
       return none
     }
-    useShader = true
     val vertexShader = vertShader
     val fragmentShader = fragShader
     new ShaderProgram(program, vertexShader, fragmentShader)
