@@ -40,18 +40,15 @@ object Mind extends App {
   val tileManager = new TileManager()
   val r = new Random()
 
-  println("Init Display")
   initDisplay()
 
   val sampler = initSampler()
 
-  println("Sprite Map")
   val sprites16x16 = new SpriteMap(16, 16)
 
-  println("Creating full screen quad.")
   val (fullscrenVAO, fullscrenVBO, fullscrenIndicies, fullscreenVBOUV, fullscrenIndicesCount) = GeometryUtil.initFullscreenQuad()
   val (vaoId, vboId, vertexCount, vbouvId, vboiId, indicesCount) = GeometryUtil.makeQuad(ws, hs, adj, sprites16x16)
-  println("Loading textures")
+
   val textures = loadTextures
 
   def loadTextures = {
@@ -66,8 +63,6 @@ object Mind extends App {
     close = true
   }
 
-
-  println("generating gbuffer textures")
   val fboEnabled = GLContext.getCapabilities().GL_EXT_framebuffer_object
   checkError("getting capabilities")
   val gbuffer1 = TextureUtil.generateTexture(w, h, 0)
@@ -315,7 +310,7 @@ object Mind extends App {
     Display.sync(60)
     GL11.glDisable(GL11.GL_DEPTH_TEST)
     checkError("Disable depth test")
-    System.out.println("OpenGL version: " + GL11.glGetString(GL11.GL_VERSION))
+    println("OpenGL version: " + GL11.glGetString(GL11.GL_VERSION))
   }
 
   def initView() {
