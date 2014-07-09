@@ -50,18 +50,6 @@ object Mind extends App {
 
   val textures = loadTextures
 
-  def loadTextures = {
-    val normalTexId = TextureUtil.loadPNGTexture("res/sprite1-normal.png", 0)
-    val texId = TextureUtil.loadPNGTexture("res/sprite1-color.png", 0)
-    val specularTexId = TextureUtil.loadPNGTexture("res/sprite1-specular.png", 0)
-    val heightmapTexId = TextureUtil.loadPNGTexture("res/sprite1-height.png", 0)
-    List(normalTexId, texId, specularTexId, heightmapTexId)
-  }
-
-  def quit() {
-    close = true
-  }
-
   val fboEnabled = GLContext.getCapabilities().GL_EXT_framebuffer_object
   checkError("getting capabilities")
   val gbuffer1 = TextureUtil.generateTexture(w, h, 0)
@@ -81,6 +69,18 @@ object Mind extends App {
   }
 
   clean()
+
+  def loadTextures = {
+    val normalTexId = TextureUtil.loadPNGTexture("res/sprite1-normal.png", 0)
+    val texId = TextureUtil.loadPNGTexture("res/sprite1-color.png", 0)
+    val specularTexId = TextureUtil.loadPNGTexture("res/sprite1-specular.png", 0)
+    val heightmapTexId = TextureUtil.loadPNGTexture("res/sprite1-height.png", 0)
+    List(normalTexId, texId, specularTexId, heightmapTexId)
+  }
+
+  def quit() {
+    close = true
+  }
 
   def initFramebuffer(textureIDs: Array[Texture]): Int = {
     val attachments = Array[Int](GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4, GL_COLOR_ATTACHMENT5, GL_COLOR_ATTACHMENT6, GL_COLOR_ATTACHMENT7)
@@ -106,7 +106,6 @@ object Mind extends App {
         GL11.GL_TEXTURE_2D, textureIDs(i).id, 0)
       checkError("InitFBO using texture2D")
     }
-
 
     checkError("InitFBO should be done")
 
