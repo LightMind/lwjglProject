@@ -11,7 +11,7 @@ import org.lwjgl.opengl.GL31._
 import org.lwjgl.opengl.GL32._
 import org.lwjgl.opengl.GL33._
 
-class VertexArrayObject(val id: Int, val indices: Int, val indicesCoun: Int, val fbos: Array[Int]) {
+class VertexArrayObject(val id: Int, val indices: Int, val indicesCount: Int, val fbos: Array[Int]) {
   var alive = true
 
   def destroy() {

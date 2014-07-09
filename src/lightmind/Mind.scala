@@ -46,7 +46,7 @@ object Mind extends App {
   val sprites16x16 = new SpriteMap(16, 16)
 
   val fullscreenVAO = GeometryUtil.initFullscreenQuad()
-  val (vaoId, vboId, vertexCount, vbouvId, vboiId, indicesCount) = GeometryUtil.makeQuad(ws, hs, adj, sprites16x16)
+  val quadVAO = GeometryUtil.makeQuad(ws, hs, adj, sprites16x16)
 
   val textures = loadTextures
 
@@ -144,21 +144,7 @@ object Mind extends App {
   }
 
   def clean() {
-    // Disable the VBO index from the VAO attributes list
-    GL20.glDisableVertexAttribArray(0)
-
-    // Delete the vertex VBO
-    GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0)
-    GL15.glDeleteBuffers(vboId)
-
-    // Delete the index VBO
-    GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0)
-    GL15.glDeleteBuffers(vboiId)
-
-    // Delete the VAO
-    GL30.glBindVertexArray(0)
-    GL30.glDeleteVertexArrays(vaoId)
-
+    quadVAO.destroy()
     fullscreenVAO.destroy()
 
     programGBuffer.destroy()
@@ -235,10 +221,10 @@ object Mind extends App {
     checkError("setting texture uniforms")
 
     // Bind to the VAO that has all the information about the quad vertices
-    GL30.glBindVertexArray(vaoId)
+    GL30.glBindVertexArray(quadVAO.id)
     checkError("Binding vertex array vaoID")
 
-    GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vboiId)
+    GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, quadVAO.indices)
     checkError("Binding indicis for quads")
 
     glBindFramebuffer(GL_FRAMEBUFFER, fbo)
@@ -261,7 +247,7 @@ object Mind extends App {
       val (x, y) = tile.pos
       GL20.glUniform2f(uvPosition, i, j)
       GL20.glUniform2f(posLocation, x, y)
-      GL11.glDrawElements(GL11.GL_TRIANGLES, indicesCount, GL11.GL_UNSIGNED_BYTE, 0)
+      GL11.glDrawElements(GL11.GL_TRIANGLES, quadVAO.indicesCount, GL11.GL_UNSIGNED_BYTE, 0)
     }
 
     checkError("Drawing tiles")
@@ -280,11 +266,8 @@ object Mind extends App {
     checkError("Binding fullscreen VAO")
     GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, fullscreenVAO.indices)
     checkError("Bind indices for fullscreen vbo")
-    GL11.glDrawElements(GL11.GL_TRIANGLES, indicesCount, GL11.GL_UNSIGNED_BYTE, 0)
+    GL11.glDrawElements(GL11.GL_TRIANGLES, fullscreenVAO.indicesCount, GL11.GL_UNSIGNED_BYTE, 0)
     checkError("Done drawing fullscreen quad")
-    // Put everything back to default (deselect)
-    //  GL20.glDisableVertexAttribArray(0)
-    //  GL20.glDisableVertexAttribArray(1)
 
     GL30.glBindVertexArray(0)
 
