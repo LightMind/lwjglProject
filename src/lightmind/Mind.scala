@@ -23,7 +23,6 @@ import org.lwjgl.opengl.GL33._
 import scala.util.Random
 
 object Mind extends App {
-  var x = 0
   val w = 1280
   val h = 720
   var t = 1.0f
@@ -76,7 +75,6 @@ object Mind extends App {
   initTiles()
 
   while (!Display.isCloseRequested && !close) {
-    x = x + 1
     t += 0.002f
     drawWithShader()
     Display.update()
