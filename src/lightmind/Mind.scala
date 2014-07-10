@@ -69,9 +69,16 @@ object Mind extends App {
   val programGBuffer = ShaderUtil.compileShaders("gpass.vert", "gpass.frag")
 
   initTiles()
+  val mTile = tileManager.tiles.last
+
+  def texelize(a: Float, scalar: Float): Float = {
+    (Math.floor(a / scalar) * scalar).toFloat
+  }
 
   while (!Display.isCloseRequested && !close) {
     t += 0.002f
+    mTile.pos = (200f + Math.cos(t * 10).toFloat * 150, 400 + Math.sin(t * 2).toFloat * 150)
+
     drawWithShader()
     Display.update()
     Thread.sleep(15)
@@ -245,11 +252,11 @@ object Mind extends App {
 
     GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT)
     checkError("Clearing framebuffer")
-    GL11.glDisable(GL11.GL_DEPTH_TEST)
     checkError("Disable depth test (again)")
 
     val posLocation = GL20.glGetUniformLocation(programGBuffer.program, "position")
     val uvPosition = GL20.glGetUniformLocation(programGBuffer.program, "uvPosition")
+    val depth = glGetUniformLocation(programGBuffer.program, "depth")
 
     for (tile <- tileManager.tiles) {
       val (i, j) = tile.texture
@@ -354,7 +361,7 @@ object Mind extends App {
     GL11.glShadeModel(GL11.GL_SMOOTH)
     GL11.glClearColor(0.0f, 0.0f, 0.0f, 0.0f)
     GL11.glClearDepth(1.0f)
-    GL11.glDisable(GL11.GL_DEPTH_TEST)
+    glDisable(GL_DEPTH_TEST)
     GL11.glHint(GL11.GL_PERSPECTIVE_CORRECTION_HINT, GL11.GL_NICEST)
   }
 
