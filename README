@@ -2,9 +2,5 @@ lwjgl project
 
 TODO
 	- implement batching of tiles, either with some VAO's or one VAO and change to uv buffer to draw multiple tiles.
-	- implement deferred rendering to support many small lights and basic shadows from heightmap
-	- for deferred rendering, render at non scaled resolution, and scale as the very last step.
-	- implement light accumulation
-	- refactor opengl code. Need strategy to keep opengl objects 
-from floating around all over the code.
+	- implement for support of sprites at arbitrary positions.
 	
