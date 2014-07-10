@@ -3,3 +3,11 @@ lwjgl project
 TODO
 	- implement batching of tiles, either with some VAO's or one VAO and change to uv buffer to draw multiple tiles.
 	- implement for support of sprites at arbitrary positions.
+
+	Game:
+	Platformer
+	    Implement movement of a player character.
+	    This includes collision detection.
+
+	Multiplayer
+	    Server / client.
