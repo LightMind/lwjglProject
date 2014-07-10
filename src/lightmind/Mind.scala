@@ -288,7 +288,7 @@ object Mind extends App {
     glUniform4f(screenOne, w, h, 0, 0)
     glUniform1f(radius, 300)
     glUniform3f(lightColor, 1.0f, 1.0f, 1.0f)
-    glUniform1f(lightIntensity, 1.0f)
+    glUniform1f(lightIntensity, 1.5f)
 
     // bind circle vao,render lights.
     GL30.glBindVertexArray(circleVAO.id)
@@ -298,12 +298,20 @@ object Mind extends App {
     GL11.glDrawElements(GL11.GL_TRIANGLE_FAN, circleVAO.indicesCount, GL_UNSIGNED_BYTE, 0)
     checkError("Done drawing fullscreen quad")
 
-    glUniform2f(positionOne, 100, 100)
+
     glUniform4f(screenOne, w, h, 0, 0)
-    glUniform1f(radius, 500)
-    glUniform3f(lightColor, 0.5f, 0.5f, 1.0f)
-    glUniform1f(lightIntensity, 1.0f)
-    GL11.glDrawElements(GL11.GL_TRIANGLE_FAN, circleVAO.indicesCount, GL_UNSIGNED_BYTE, 0)
+    glUniform1f(radius, 150)
+
+    glUniform1f(lightIntensity, 1.3f)
+
+    for (i <- 100 until w by 200) {
+      for (j <- 100 until h by 200) {
+        glUniform2f(positionOne, i, j)
+        glUniform3f(lightColor, i.toFloat / w, j.toFloat / h, 1.0f)
+        GL11.glDrawElements(GL11.GL_TRIANGLE_FAN, circleVAO.indicesCount, GL_UNSIGNED_BYTE, 0)
+      }
+    }
+
 
     // Show light accumulation in fullscreen
     glDisable(GL_BLEND)
