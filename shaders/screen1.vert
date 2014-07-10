@@ -13,6 +13,7 @@ out Data {
 void main(){
     gl_Position = vec4(((position+in_Position.xy*radius)/screen.xy)*2.0 - 1.0,0.0,1.0);
     gl_Position.y = -gl_Position.y;
-    Out.screenPosition = (gl_Position.xy*0.5 +0.5) * screen.xy;
-    Out.uv = gl_Position.xy*0.5 +0.5;
+    Out.screenPosition = position+in_Position.xy*radius;
+    Out.uv = (position+in_Position.xy*radius)/screen.xy;
+    Out.uv = vec2(Out.uv.x, 1.0-Out.uv.y);
 }

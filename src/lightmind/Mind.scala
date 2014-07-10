@@ -74,6 +74,7 @@ object Mind extends App {
     t += 0.002f
     drawWithShader()
     Display.update()
+    Thread.sleep(15)
   }
 
   clean()
@@ -146,7 +147,7 @@ object Mind extends App {
 
     for (i <- 0 until w by 64) {
       for (j <- 320 until h by 64) {
-        tileManager.createTile((i, j), (2, 1))
+        tileManager.createTile((i, j), (2, 0))
       }
     }
   }
@@ -173,7 +174,7 @@ object Mind extends App {
 
   def getLights() = {
     val mx = Mouse.getX
-    val my = h - Mouse.getY
+    val my = Mouse.getY
 
     val lights = Array[Float](
       mx, my,
@@ -280,10 +281,14 @@ object Mind extends App {
     val positionOne = glGetUniformLocation(programOne.program, "position")
     val screenOne = glGetUniformLocation(programOne.program, "screen")
     val radius = glGetUniformLocation(programOne.program, "radius")
+    val lightColor = glGetUniformLocation(programOne.program, "lightColor")
+    val lightIntensity = glGetUniformLocation(programOne.program, "lightIntensity")
 
     glUniform2f(positionOne, Mouse.getX, h - Mouse.getY)
     glUniform4f(screenOne, w, h, 0, 0)
-    glUniform1f(radius, 500)
+    glUniform1f(radius, 300)
+    glUniform3f(lightColor, 1.0f, 1.0f, 1.0f)
+    glUniform1f(lightIntensity, 1.0f)
 
     // bind circle vao,render lights.
     GL30.glBindVertexArray(circleVAO.id)
@@ -293,9 +298,11 @@ object Mind extends App {
     GL11.glDrawElements(GL11.GL_TRIANGLE_FAN, circleVAO.indicesCount, GL_UNSIGNED_BYTE, 0)
     checkError("Done drawing fullscreen quad")
 
-    glUniform2f(positionOne, 50, 50)
+    glUniform2f(positionOne, 100, 100)
     glUniform4f(screenOne, w, h, 0, 0)
     glUniform1f(radius, 500)
+    glUniform3f(lightColor, 0.5f, 0.5f, 1.0f)
+    glUniform1f(lightIntensity, 1.0f)
     GL11.glDrawElements(GL11.GL_TRIANGLE_FAN, circleVAO.indicesCount, GL_UNSIGNED_BYTE, 0)
 
     // Show light accumulation in fullscreen

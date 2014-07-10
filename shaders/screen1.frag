@@ -7,6 +7,8 @@ uniform sampler2D g3;
 uniform vec2 position;
 uniform vec4 screen;
 uniform float radius;
+uniform vec3 lightColor;
+uniform float lightIntensity;
 
 out vec4 glc;
 
@@ -29,8 +31,18 @@ vec3 getNormalAt(vec2 pos){
     return norm;
 }
 
+vec2 textureToScreen(vec2 p) {
+    return p*screen.xy;
+}
+
+vec2 screenToTexture(vec2 p) {
+    return vec2(p.x,-p.y)/screen.xy;
+}
+
 void main(){
     bool rasterize = true;
+
+    float heightFactor = 3.0;
 
     vec2 uv = In.uv;
     float scalar = 256.0;
@@ -39,39 +51,53 @@ void main(){
     vec3 normal = getNormalAt(uv);
     float height = texture(g1,uv).w;
 
-    vec3 lightPosition = vec3(position.x, 40.0, position.y);
-    vec3 location = vec3(In.screenPosition.x, 0.0, screen.y - In.screenPosition.y);
+    vec3 lightPosition = vec3(position.x, 50.0, position.y);
+    vec3 location = vec3(In.screenPosition.x, height, In.screenPosition.y);
     vec3 toLight = lightPosition - location;
 
-    vec2 toLightTexture = toLight.xz/(512*32)*vec2(1.0,-1.0);
+    vec3 toLightTexture = vec3(toLight);
+
+    vec3 rLocation = floor(location/8.0)*8.0;
+    vec3 rLight = floor(lightPosition/8.0)*8.0;
 
     if( rasterize ) {
-        toLight = floor(lightPosition/8.0)*8.0 - floor(location/8.0)*8.0;
+        toLight = rLight - rLocation;
     }
 
     float distance = length(toLight);
 
     float nDotL =  max(0.0,dot(normalize(toLight),normal));
-    float falloff = getFalloff(distance*0.001) - getFalloff(radius*0.001);
+    float falloff = getFalloff(distance*0.01) - getFalloff(radius*0.01);
 
     vec3 t =  normalize(vec3(0.0,1.0,0.0) + toLight);
-    float specular = pow(max(0.0,dot(normal,t)),2.5);
+    float specular = pow(max(0.0,dot(normal,t)),10.5);
 
     if( rasterize ){
         nDotL = floor(nDotL*4.0)/4.0;
         specular = floor(specular*4.0)/4.0;
     }
 
-    float height0 = texture(g1,uv+toLightTexture*0.1666).w;
-    float height1 = texture(g1,uv+toLightTexture*0.33).w;
-    float height2 = texture(g1,uv+toLightTexture*0.66).w;
-    float height3 = texture(g1,uv+toLightTexture*0.88).w;
-    if(height < height1 || height < height2 || height < height3 || height < height0){
-        nDotL = 0.0;
+    vec3 ntoLight = normalize(toLight);
+
+    bool shadows = false;
+    float shadow = 1.0;
+
+    if(shadows){
+        float dHeight = (lightPosition.y - location.y)/length(toLightTexture);
+        vec2 tmov = normalize(vec2(toLightTexture.x,toLightTexture.z));
+        for( int i = 1; i < 8; i++ ){
+            float currentHeight = location.y + dHeight*i;
+            vec2 currentPosition = location.xz + tmov*i*2;
+            float heightSample = texture(g1,screenToTexture(currentPosition)).w;
+            if(currentHeight < heightSample){
+                float t = heightSample - currentHeight;
+                shadow = min(shadow,1-t);
+            }
+        }
     }
 
-    vec3 diffuseComponent = vec3(nDotL * falloff) * texture(g1,uv).rgb;
-    vec3 specularComponent = specular*specVal;
+    vec3 diffuseComponent = vec3(shadow *nDotL * falloff) * texture(g1,uv).rgb *lightColor*lightIntensity;
+    vec3 specularComponent = specVal*specular*lightColor*lightIntensity*falloff*6;
 
     glc = vec4(specularComponent + diffuseComponent,1.0);
 }
