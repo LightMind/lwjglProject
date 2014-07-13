@@ -96,10 +96,37 @@ void main(){
         }
     }
 
-    vec3 diffuseComponent = vec3(shadow *nDotL * falloff) * texture(g1,uv).rgb *lightColor*lightIntensity;
+    bool ao = false;
+    float aof = 1.0;
+    float counter = 0.0;
+    if(ao){
+        float h1 = texture(g1,screenToTexture(location.xz + vec2(1,1)*4)).w;
+        float h2 = texture(g1,screenToTexture(location.xz + vec2(1,0)*4)).w;
+        float h3 = texture(g1,screenToTexture(location.xz + vec2(1,-1)*4)).w;
+        float h4 = texture(g1,screenToTexture(location.xz + vec2(-1,1)*4)).w;
+        float h5 = texture(g1,screenToTexture(location.xz + vec2(-1,0)*4)).w;
+        float h6 = texture(g1,screenToTexture(location.xz + vec2(-1,-1)*4)).w;
+        float h7 = texture(g1,screenToTexture(location.xz + vec2(0,1 )*4)).w;
+        float h8 = texture(g1,screenToTexture(location.xz + vec2(0,-1)*4)).w;
+
+        if(h1 > height) counter += h1-height ;
+        if(h2 > height) counter += h2-height ;
+        if(h3 > height) counter += h3-height ;
+        if(h4 > height) counter += h4-height ;
+        if(h5 > height) counter += h5-height ;
+        if(h6 > height) counter += h6-height ;
+        if(h7 > height) counter += h7-height ;
+        if(h8 > height) counter += h8-height ;
+
+        aof = 1.0 - min(1.0,1.5*counter/8.0);
+        aof = max(0.1 , aof);
+    }
+
+    vec3 diffuseComponent = aof*vec3(shadow *nDotL * falloff) * texture(g1,uv).rgb *lightColor*lightIntensity;
     vec3 specularComponent = specVal*specular*lightColor*lightIntensity*falloff*6;
 
     glc = vec4(specularComponent + diffuseComponent,1.0);
+    //glc = vec4(aof,aof,aof,1.0);
 }
 
 
